@@ -129,6 +129,7 @@ class MainHandler(webapp2.RequestHandler):
 Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 <p/><input type=submit>
 </form>
+</body>
 """)
           return
         else:

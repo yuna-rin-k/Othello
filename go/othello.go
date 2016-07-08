@@ -1,6 +1,8 @@
 package othello
 
 import (
+	"io/ioutil"
+
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
@@ -20,11 +22,26 @@ type Game struct {
 
 func getMove(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+	var js []byte
 	defer r.Body.Close()
-	decoder := json.NewDecoder(r.Body)
+	js, _ = ioutil.ReadAll(r.Body)
+	if len(js) < 1 {
+		js = []byte(r.FormValue("json"))
+	}
+	if len(js) < 1 {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, `
+<body><form method=get>
+Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
+<p/><input type=submit>
+</form>
+</body>`)
+		return
+	}
 	var game Game
-	if err := decoder.Decode(&game); err != nil {
-		log.Infof(ctx, "invalid json: %v", err)
+	err := json.Unmarshal(js, &game)
+	if err != nil {
+		fmt.Fprintf(w, "invalid json %v? %v", string(js), err)
 		return
 	}
 	board := game.Board
