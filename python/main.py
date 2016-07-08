@@ -20,7 +20,7 @@ import random
 import webapp2
 
 # Reads json description of the board and provides simple interface.
-class Board:
+class Game:
 	# Takes json.
 	def __init__(self, body):
 		self.board_ = json.loads(body)
@@ -118,28 +118,38 @@ def ParseMove(move):
 	return '%s%d' % (chr(ord('A') + m[0] - 1), m[1])
 
 class MainHandler(webapp2.RequestHandler):
-	# Handling GET request, just for debugging purposes.
+    # Handling GET request, just for debugging purposes.
+    # If you open this handler directly, it will show you the
+    # HTML form here and let you copy-paste some game's JSON
+    # here for testing.
     def get(self):
-        self.response.write('Get<hr>')
-        b = Board(self.request.get('board'))
-        # Write JSON string.
-    	self.response.write(json.dumps(b.Object()))
-        self.response.write('<hr>')
-    	v = b.ValidMoves()
-    	# Display next board position after placing first valid move.
-    	self.response.write(PrettyPrint(b.NextBoardPosition(v[0])))
-    	
+        if not self.request.get('json'):
+          self.response.write("""
+<body><form method=get>
+Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
+<p/><input type=submit>
+</form>
+""")
+          return
+        else:
+          g = Game(self.request.get('json'))
+          self.pickMove(g)
+
     def post(self):
     	# Reads JSON representation of the board and store as the object.
-    	b = Board(self.request.body)
+    	g = Game(self.request.body)
+        # Do the picking of a move and print the result.
+        self.pickMove(g)
+
+    def pickMove(self, g):
     	# Gets all valid moves.
-    	valid_moves = b.ValidMoves()
+    	valid_moves = g.ValidMoves()
     	if len(valid_moves) == 0:
     		# Passes if no valid moves.
     		self.response.write("PASS")
     	else:
     		# Chooses a valid move randomly if available.
-	    	move = random.choice(b.ValidMoves())
+	    	move = random.choice(g.ValidMoves())
     		self.response.write(ParseMove(move))
 
 app = webapp2.WSGIApplication([
