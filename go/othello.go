@@ -14,6 +14,30 @@ func init() {
 	http.HandleFunc("/", getMove)
 }
 
+type Game struct {
+	Board Board `json:board`
+}
+
+func getMove(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	var game Game
+	if err := decoder.Decode(&game); err != nil {
+		log.Infof(ctx, "invalid json: %v", err)
+		return
+	}
+	board := game.Board
+	log.Infof(ctx, "got board: %v", board)
+	moves := board.ValidMoves()
+	if len(moves) < 1 {
+		fmt.Fprintf(w, "PASS")
+		return
+	}
+	move := moves[rand.Intn(len(moves))]
+	fmt.Fprintf(w, "[%d,%d]", move.Where[0], move.Where[1])
+}
+
 type Piece int8
 
 const (
@@ -176,28 +200,4 @@ func (b *Board) ValidMoves() []Move {
 		}
 	}
 	return moves
-}
-
-type Game struct {
-	Board Board `json:board`
-}
-
-func getMove(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	defer r.Body.Close()
-	decoder := json.NewDecoder(r.Body)
-	var game Game
-	if err := decoder.Decode(&game); err != nil {
-		log.Infof(ctx, "invalid json: %v", err)
-		return
-	}
-	board := game.Board
-	log.Infof(ctx, "got board: %v", board)
-	moves := board.ValidMoves()
-	if len(moves) < 1 {
-		fmt.Fprintf(w, "PASS")
-		return
-	}
-	move := moves[rand.Intn(len(moves))]
-	fmt.Fprintf(w, "[%d,%d]", move.Where[0], move.Where[1])
 }
