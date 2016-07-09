@@ -8,10 +8,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 )
 
 var (
@@ -19,22 +21,14 @@ var (
 	whiteKey = flag.String("whitekey", "", "player key for white. required to reflect moves as white")
 	blackKey = flag.String("blackkey", "", "player key for black. required to reflect moves as white")
 
-	bot = flag.String("bot", "http://localhost:8080", "what service to reflect for getting moves")
+	bot    = flag.String("bot", "http://localhost:8080", "what service to reflect for getting moves")
+	server = flag.String("server", "https://3-dot-step-othello.appspot.com", "what service to use for sending/receiving game state")
 )
 
-const (
-	kServer = "https://3-dot-step-othello.appspot.com"
+var (
+	baseURL url.URL
+	client  http.Client
 )
-
-var baseURL url.URL
-
-func init() {
-	parsed, err := url.Parse(kServer)
-	if err != nil {
-		panic(err)
-	}
-	baseURL = *parsed
-}
 
 func exitUsage() {
 	fmt.Print(`usage: reflector [flags] [game viewer URL]
@@ -116,28 +110,43 @@ func (p Piece) String() string {
 	panic(fmt.Errorf("invalid piece: %#v", p))
 }
 
+type board struct {
+	Next Piece
+}
 type game struct {
 	// A winner signals that the game is over and we should shut down.
 	Winner Piece `json:winner`
+	Board  board `json:board`
 }
 
-// getGame gets the raw JSON for a game and also the winner if there
-// is one.
-func getGame(viewer url.URL) (string, Piece, error) {
+// getGame gets the raw JSON for a game and a partially decoded form.
+func getGame(viewer url.URL) (string, game, error) {
 	var g game
 	log.Printf("reading game state from %v", viewer.String())
 	resp, err := http.Get(viewer.String())
 	if err != nil {
-		return "", g.Winner, err
+		return "", g, err
 	}
 	defer resp.Body.Close()
 	var buf bytes.Buffer
 	dec := json.NewDecoder(io.TeeReader(resp.Body, &buf))
 	err = dec.Decode(&g)
 	if err != nil {
-		return buf.String(), g.Winner, fmt.Errorf("failed to parse json (%q): %v", buf.String(), err)
+		return buf.String(), g, fmt.Errorf("failed to parse json (%q): %v", buf.String(), err)
 	}
-	return buf.String(), g.Winner, nil
+	return buf.String(), g, nil
+}
+
+func getMove(game string) (string, error) {
+	buf := bytes.NewBuffer([]byte(game))
+	log.Printf("asking %v for a move", *bot)
+	resp, err := http.Post(*bot, "application/json", buf)
+	defer resp.Body.Close()
+	if err != nil {
+		return "", err
+	}
+	move, err := ioutil.ReadAll(resp.Body)
+	return string(move), err
 }
 
 func main() {
@@ -152,17 +161,64 @@ func main() {
 		fmt.Println("Need a gamekey and at least one player key")
 		exitUsage()
 	}
+	parsed, err := url.Parse(*server)
+	if err != nil {
+		panic(err)
+	}
+	baseURL = *parsed
 
 	viewer := newURL("/get", nil)
-	for {
-		game, winner, err := getGame(viewer)
+	mover := newURL("/move", nil)
+
+	// limit to 150 turns, just to avoid accidentally infinitely
+	// looping.
+	for turn := 0; turn < 150; turn++ {
+		var js string
+		turnStart := time.Now()
+		for {
+			var err error
+			var game game
+			js, game, err = getGame(viewer)
+			if err != nil {
+				log.Fatalf("failed to get game: %v", err)
+			}
+			if game.Winner != Empty {
+				fmt.Printf("game is over: %v won!", game.Winner)
+				os.Exit(0)
+			}
+
+			// are we expected to be playing this turn?
+			switch game.Board.Next {
+			case White:
+				if len(*whiteKey) < 1 {
+					goto notMe
+				}
+			case Black:
+				if len(*blackKey) < 1 {
+					goto notMe
+				}
+			default:
+				log.Fatalf("invalid player's turn (%v) omgwtfbbq", game.Board.Next)
+			}
+			break
+
+		notMe:
+			if time.Since(turnStart) > time.Hour {
+				log.Fatal("opponent hasn't moved in ages. giving up.")
+			}
+			log.Printf("not our turn yet. Waiting for other player to move.")
+			time.Sleep(time.Second)
+		}
+
+		move, err := getMove(js)
 		if err != nil {
-			log.Fatalf("failed to get game: %v", err)
+			log.Fatalf("failed to get move: %v", err)
 		}
-		if winner != Empty {
-			fmt.Printf("game is over: %v won!", winner)
+
+		setParams(&mover, url.Values{"move": []string{move}})
+		_, err = http.Get(mover.String())
+		if err != nil {
+			log.Fatalf("failed to send move %q: %v", move, err)
 		}
-		fmt.Println(game)
-		os.Exit(0)
 	}
 }
