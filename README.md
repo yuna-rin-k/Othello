@@ -1,4 +1,4 @@
-# hw7
+# Homework 7
 
 1. Fork a copy for your changes
 2. Clone it to your local workstation
