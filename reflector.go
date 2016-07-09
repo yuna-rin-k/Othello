@@ -19,7 +19,7 @@ import (
 var (
 	gameKey  = flag.String("gamekey", "", "gamekey of game to get state from and send moves to")
 	whiteKey = flag.String("whitekey", "", "player key for white. required to reflect moves as white")
-	blackKey = flag.String("blackkey", "", "player key for black. required to reflect moves as white")
+	blackKey = flag.String("blackkey", "", "player key for black. required to reflect moves as black")
 
 	bot    = flag.String("bot", "http://localhost:8080", "what service to reflect for getting moves")
 	server = flag.String("server", "https://step-othello.appspot.com", "what service to use for sending/receiving game state")
