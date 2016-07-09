@@ -22,7 +22,7 @@ var (
 	blackKey = flag.String("blackkey", "", "player key for black. required to reflect moves as white")
 
 	bot    = flag.String("bot", "http://localhost:8080", "what service to reflect for getting moves")
-	server = flag.String("server", "https://3-dot-step-othello.appspot.com", "what service to use for sending/receiving game state")
+	server = flag.String("server", "https://step-othello.appspot.com", "what service to use for sending/receiving game state")
 )
 
 var (
