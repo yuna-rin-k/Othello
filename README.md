@@ -4,7 +4,7 @@
 2. Clone it to your local workstation
 3. Create a new project to host your AI in https://console.cloud.google.com
 4. Update the "application" field in app.yaml to match your application
-5. `appcfg.py update` or `goapp deploy` your app
+5. `appcfg.py update python/` or `goapp deploy go/` to deploy your app
 6. Add the appspot address to the ["Othello Players" sheet](https://docs.google.com/spreadsheets/d/1j2M92fZQjblAj3KPaLI2NJ0mkFS4dLv85jizmoMn3m0/edit#gid=0)
 7. **Modify the way a move is picked**
 8. re-deploy the app
