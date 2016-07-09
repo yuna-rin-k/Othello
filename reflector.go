@@ -59,6 +59,10 @@ func parseURL(view string) error {
 	for k, v := range vals {
 		flag.Set(k, v[0])
 	}
+	u.Path = ""
+	u.RawQuery = ""
+	u.Fragment = ""
+	baseURL = *u
 	return nil
 }
 
@@ -111,7 +115,8 @@ func (p Piece) String() string {
 }
 
 type board struct {
-	Next Piece
+	Pieces [8][8]Piece
+	Next   Piece
 }
 type game struct {
 	// A winner signals that the game is over and we should shut down.
@@ -137,13 +142,42 @@ func getGame(viewer url.URL) (string, game, error) {
 	return buf.String(), g, nil
 }
 
-func getMove(game string) (string, error) {
-	buf := bytes.NewBuffer([]byte(game))
-	log.Printf("asking %v for a move", *bot)
-	resp, err := http.Post(*bot, "application/json", buf)
+func moveReqURL(game game) (*url.URL, error) {
+	u, err := url.Parse(*bot)
+	if err != nil {
+		return u, err
+	}
+	vals, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		return u, err
+	}
+	js, err := json.Marshal(game.Board)
+	if err != nil {
+		return u, err
+	}
+	vals.Set("board", string(js))
+	u.RawQuery = vals.Encode()
+	return u, nil
+}
+
+// getMove retrieves a move from an AI. This includes a lot of overly
+// complex URL request wrangling to mimic what the actual server does
+// to send game/board state to both the POST body and a "board" query
+// param.
+func getMove(js string, game game) (string, error) {
+	buf := bytes.NewBuffer([]byte(js))
+	log.Printf("asking %v for a move given state: %v", *bot, js)
+	botURL, err := moveReqURL(game)
+	if err != nil {
+		log.Panicf("invalid bot URL from %v: %v", *bot, err)
+	}
+	resp, err := http.Post(botURL.String(), "application/json", buf)
 	defer resp.Body.Close()
 	if err != nil {
 		return "", err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		log.Printf("warning: response status from %v was %d (%s)", botURL, resp.StatusCode, resp.Status)
 	}
 	move, err := ioutil.ReadAll(resp.Body)
 	return string(move), err
@@ -156,16 +190,17 @@ func main() {
 			log.Print(err)
 			exitUsage()
 		}
+	} else {
+		parsed, err := url.Parse(*server)
+		if err != nil {
+			log.Fatalf("bad server flag %s: %v", *server, err)
+		}
+		baseURL = *parsed
 	}
 	if len(*gameKey) < 1 && (len(*whiteKey) < 1 || len(*blackKey) < 1) {
 		fmt.Println("Need a gamekey and at least one player key")
 		exitUsage()
 	}
-	parsed, err := url.Parse(*server)
-	if err != nil {
-		panic(err)
-	}
-	baseURL = *parsed
 
 	viewer := newURL("/get", nil)
 	mover := newURL("/move", nil)
@@ -174,16 +209,16 @@ func main() {
 	// looping.
 	for turn := 0; turn < 150; turn++ {
 		var js string
+		var game game
 		turnStart := time.Now()
 		for {
 			var err error
-			var game game
 			js, game, err = getGame(viewer)
 			if err != nil {
 				log.Fatalf("failed to get game: %v", err)
 			}
 			if game.Winner != Empty {
-				fmt.Printf("game is over: %v won!", game.Winner)
+				fmt.Printf("game is over: %v won!\n", game.Winner)
 				os.Exit(0)
 			}
 
@@ -210,10 +245,11 @@ func main() {
 			time.Sleep(time.Second)
 		}
 
-		move, err := getMove(js)
+		move, err := getMove(js, game)
 		if err != nil {
 			log.Fatalf("failed to get move: %v", err)
 		}
+		log.Printf("forwarding move: %s", move)
 
 		setParams(&mover, url.Values{"move": []string{move}})
 		_, err = http.Get(mover.String())
