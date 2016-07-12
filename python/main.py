@@ -18,11 +18,11 @@ class Game:
 	# 0 for no pieces, 1 for player 1, 2 for player 2.
 	# None for coordinate out of scope.
 	def Pos(self, x, y):
-		return Pos(self._game["board"]["Pieces"], x, y)
+		return Pos(self._board["Pieces"], x, y)
 
 	# Returns who plays next.
 	def Next(self):
-		return self._game["board"]["Next"]
+		return self._board["Next"]
 
 	# Returns the array of valid moves for next player.
 	# Each move is a dict
