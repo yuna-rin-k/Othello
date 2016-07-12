@@ -9,10 +9,14 @@ import webapp2
 
 # Reads json description of the board and provides simple interface.
 class Game:
-	# Takes json.
-	def __init__(self, body):
-		self._game = json.loads(body)
-                self._board = self._game["board"]
+	# Takes json or a board directly.
+	def __init__(self, body=None, board=None):
+                if body:
+		        game = json.loads(body)
+                        self._board = game["board"]
+                else:
+                        self._board = board
+                
 
 	# Returns piece on the board.
 	# 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -36,7 +40,6 @@ class Game:
                                         "As": self.Next()}
                                 if self.NextBoardPosition(move):
                                         moves.append(move)
-                logging.info("Valid moves: %s" % [PrettyMove(x) for x in moves])
                 return moves
                                 
 
@@ -67,7 +70,7 @@ class Game:
                         return True
                 return False
 
-	# Takes a move dict and return the board positions after that move.
+	# Takes a move dict and return the new Game state after that move.
 	# Returns None if the move itself is invalid.
 	def NextBoardPosition(self, move):
 		x = move["Where"][0]
@@ -88,9 +91,10 @@ class Game:
 		        | self.__UpdateBoardDirection(pieces, x, y, -1, -1)):
                         # Nothing was captured. Move is invalid.
                         return None
-
+                
                 # Something was captured. Move is valid.
-		return new_board
+                new_board["Next"] = 3 - self.Next()
+		return Game(board=new_board)
 
 # Returns piece on the board.
 # 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -159,7 +163,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 # TO STEP STUDENTS:
                 # You'll probably want to change how this works, to do something
                 # more clever than just picking a random move.
-	    	move = random.choice(g.ValidMoves())
+	    	move = random.choice(valid_moves)
     		self.response.write(PrettyMove(move))
 
 app = webapp2.WSGIApplication([
