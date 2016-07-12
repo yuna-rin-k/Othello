@@ -147,6 +147,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         # Do the picking of a move and print the result.
         self.pickMove(g)
 
+
     def pickMove(self, g):
     	# Gets all valid moves.
     	valid_moves = g.ValidMoves()
@@ -155,6 +156,9 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     		self.response.write("PASS")
     	else:
     		# Chooses a valid move randomly if available.
+                # TO STEP STUDENTS:
+                # You'll probably want to change how this works, to do something
+                # more clever than just picking a random move.
 	    	move = random.choice(g.ValidMoves())
     		self.response.write(PrettyMove(move))
 
