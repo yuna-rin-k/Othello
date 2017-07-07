@@ -16,7 +16,6 @@ class Game:
                         self._board = game["board"]
                 else:
                         self._board = board
-                
 
 	# Returns piece on the board.
 	# 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -41,7 +40,6 @@ class Game:
                                 if self.NextBoardPosition(move):
                                         moves.append(move)
                 return moves
-                                
 
 	# Helper function of NextBoardPosition.  It looks towards
 	# (delta_x, delta_y) direction for one of our own pieces and
