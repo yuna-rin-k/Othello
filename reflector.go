@@ -22,7 +22,7 @@ var (
 	blackKey = flag.String("blackkey", "", "player key for black. required to reflect moves as black")
 
 	bot    = flag.String("bot", "http://localhost:8080", "what service to reflect for getting moves")
-	server = flag.String("server", "https://step-othello.appspot.com", "what service to use for sending/receiving game state")
+	server = flag.String("server", "https://step-reversi.appspot.com", "what service to use for sending/receiving game state")
 )
 
 var (
@@ -34,8 +34,8 @@ func exitUsage() {
 	fmt.Print(`usage: reflector [flags] [game viewer URL]
 Examples:
   reflector --gamekey=foo --whitekey=bar
-  reflector "http://step-othello.appspot.com/view?gamekey=foo&whitekey=bar"
-  reflector --whitekey=bar http://step-othello.appspot.com/view?gamekey=foo
+  reflector "http://step-reversi.appspot.com/view?gamekey=foo&whitekey=bar"
+  reflector --whitekey=bar http://step-reversi.appspot.com/view?gamekey=foo
 
 All of the above will start playing game "foo" as white using the
 player key "bar". The quotes around the full URL in the second case are
