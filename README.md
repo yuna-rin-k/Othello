@@ -5,7 +5,7 @@
 3. Create a new project to host your AI in https://console.cloud.google.com
 4. Run `gcloud init` and select that new project.
 5. `gcloud app deploy python/` or `gcloud app deploy go/` to deploy your app.
-6. Add the appspot address to the ["Othello Players" sheet](https://docs.google.com/spreadsheets/d/1UaFboojs_saqX-B4f1rAXhun74eTMdAQToo6_mGKQPs/edit)
+6. Add the appspot address to the ["Reversi Players" sheet](https://docs.google.com/spreadsheets/d/1UaFboojs_saqX-B4f1rAXhun74eTMdAQToo6_mGKQPs/edit)
 7. **Modify the way a move is picked**
 8. re-deploy the app
 9. repeat steps 7 and 8 until you have a very clever AI :)
