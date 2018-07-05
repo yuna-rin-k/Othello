@@ -21,6 +21,10 @@ type Game struct {
 	Board Board `json:board`
 }
 
+// Provide a generic handler for move requests. If no board state is
+// specified then a simple HTML form is provided to let users paste
+// JSON state (which can be copy-pasted from a game running on
+// http://step-reversi.appspot.com/ ).
 func getMove(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	var js []byte
