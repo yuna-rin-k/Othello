@@ -1,6 +1,7 @@
 package othello
 
 import (
+	"bytes"
 	"io/ioutil"
 
 	"google.golang.org/appengine"
@@ -205,6 +206,7 @@ func (b *Board) findCaptures(m Move, dir direction) []Position {
 	panic("impossible")
 }
 
+// Returns a slice of valid moves for the given Board.
 func (b *Board) ValidMoves() []Move {
 	var moves []Move
 	for y := 1; y <= 8; y++ {
@@ -217,4 +219,30 @@ func (b *Board) ValidMoves() []Move {
 		}
 	}
 	return moves
+}
+
+// Converts a Board into a human-readable ASCII art diagram.
+func (b Board) String() string {
+	buf := &bytes.Buffer{}
+	buf.WriteString("\n")
+	buf.WriteString(" |ABCDEFGH|\n")
+	buf.WriteString("-+--------+\n")
+	for y := 0; y < 8; y++ {
+		fmt.Fprintf(buf, "%d|", y+1)
+		for x := 0; x < 8; x++ {
+			p := b.Pieces[y][x]
+			switch p {
+			case Red:
+				buf.WriteString("X")
+			case Blue:
+				buf.WriteString("O")
+			default:
+				buf.WriteString(" ")
+			}
+		}
+		fmt.Fprintf(buf, "|%d\n", y+1)
+	}
+	buf.WriteString("-+--------+\n")
+	buf.WriteString(" |ABCDEFGH|\n")
+	return buf.String()
 }
