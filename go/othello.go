@@ -142,7 +142,24 @@ func (b *Board) Exec(m Move) (*Board, error) {
 	return b, nil
 }
 
-// realMove executes a move that isn't a PASS.
+// Clone makes a new identical copy of an existing board and returns a
+// pointer to it.
+func (b *Board) Clone() *Board {
+	clone := *b
+	return &clone
+}
+
+// Returns the state of a new board after the given move. Returns an
+// unchanged board and an error if the move is illegal.
+func (b Board) After(m Move) (Board, error) {
+	if _, err := b.Exec(m); err != nil {
+		return b, err
+	}
+	return b, nil
+}
+
+// realMove executes a move that isn't a PASS. Use Exec instead to
+// execute any move (include PASS moves).
 func (b *Board) realMove(m Move) (*Board, error) {
 	captures, err := b.tryMove(m)
 	if err != nil {
