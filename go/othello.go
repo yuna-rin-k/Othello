@@ -56,6 +56,11 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 		fmt.Fprintf(w, "PASS")
 		return
 	}
+	// NOTE TO STUDENTS: This next line is the main line you'll want to
+	// change.  Right now this is just picking a random move out of the
+	// list of possible moves, but you'll want to make this choose a
+	// better move (probably using some game tree traversal algorithm
+	// like MinMax).
 	move := moves[rand.Intn(len(moves))]
 	fmt.Fprintf(w, "[%d,%d]", move.Where[0], move.Where[1])
 }
