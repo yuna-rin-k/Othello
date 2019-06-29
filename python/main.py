@@ -161,8 +161,73 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 # TO STEP STUDENTS:
                 # You'll probably want to change how this works, to do something
                 # more clever than just picking a random move.
-	    	move = random.choice(valid_moves)
+
+	    	#move = random.choice(valid_moves)
+	    	best = calcMyScore()
+	    	(score, move) = dicideMovePos(3)
     		self.response.write(PrettyMove(move))
+
+    #return score, move
+    def dicideMovePos(depth):
+
+    	if depth < 1:
+    		return calcMyScore(), []
+
+    	bestScore = 0.0
+    	bestMove = []
+    	for move in ValidMoves():
+	  		nextBoard = NextBoardPosition(move)
+			(score, retMove) = dicideMovePos(depth-1)
+  			if score > bestScore:
+  				bestScore = score
+  				bestMove = move
+
+    	return bestScore, bestMove 
+
+   	#return score
+    def calcMyScore():
+    	print('こんにちは')
+    	bestMinScore = 0.0
+    	score = 0.0
+    	#opponent's turn
+    	for move in ValidMoves():
+    		nextBoard = NextBoardPosition(move) 
+    		if moveEnd():
+   				return 10.0
+    		if moveInsideNextEnd():
+    			return 0.0
+ 			score = calcScore(nextBoard)
+ 			if (bestMinScore > score):
+ 				bestMinScore = score
+
+    	return bestMinScore * -1.0
+
+
+    def moveEnd(nextBoard):
+    	moves = ValidMoves()
+    	if move in moves:
+    		if move.get("Where")[0] == 1 or move.get("Where")[0] == 8 or move.get("Where")[1] == 1 or move.get("Where")[1] == 8:
+    				return True
+    	return False
+
+    def moveInsideNextEnd(nextBoard):
+    	moves = ValidMoves()
+    	for move in moves:
+    		if move.get("Where")[0] == 2 or move.get("Where")[0] == 7 or move.get("Where")[1] == 2 or move.get("Where")[1] == 7:
+    				return True
+    	return False
+
+    #return nextBoard's score
+    def calcScore(nextBoard):
+    	scores = [2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5],[2.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 2.0],[2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0],[2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0],[2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0],[2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0],[2.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 2.0],[2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5]
+    	score = 0.0
+    	for i in 8:
+    		for j in 8:
+    			x = nextBoard["Where"][0]
+    			y = nextBoard["Where"][1]
+    			if Pos(x,y) == 1:
+    				score += scores[x][y]
+    	return score			
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
