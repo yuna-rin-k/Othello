@@ -7,6 +7,7 @@ import logging
 import random
 import webapp2
 
+
 # Reads json description of the board and provides simple interface.
 class Game:
     # Takes json or a board directly.
@@ -172,14 +173,46 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
             move = {"Where": [1, 1]}
             nextBoard = g.NextBoardPosition(move)
-            if countOfPiece <=40 :
-                (score, move) = MainHandler.firstHalfMaxMin(self, g, 4, True, move, countOfPiece)
-            else :
-                (score, move) = MainHandler.firstHalfMaxMin(self, g, 5, True, move, countOfPiece)
+            #if countOfPiece <=40 :
+                #(score, move) = MainHandler.firstHalfMaxMin(self, g, 4, True, move)
+            #else :
+                #(score, move) = MainHandler.firstHalfMaxMin(self, g, 5, True, move)
 
+
+            (score, move) = MainHandler.maxmin(self, g, 7, countOfPiece, move, nextBoard)
             self.response.write(PrettyMove(move))
 
-    def firstHalfMaxMin(self, g, depth, isBlack, nextBoard, countOfPiece):
+
+    def maxmin(self, g, depth, countOfPiece, move, nextBoard):
+        return MainHandler.alphabeta(self, depth, g, -100000, 100000, countOfPiece, True, move, nextBoard)
+
+
+    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isBlack, move, nextBoard):
+        if depth == 0:
+            #if countOfPiece <= 40:
+                return MainHandler.firstHalfCalcScore(self, g, nextBoard), move
+            #else:
+                #return MainHandler.latterHalfCalcScore(self, g), move
+
+        if isBlack:
+            for move in g.ValidMoves():
+                nextBoard = g.NextBoardPosition(move)
+                alpha = max(alpha, (MainHandler.alphabeta(self, depth-1, g, alpha, beta, countOfPiece, False, move, nextBoard)))
+                if alpha >= beta:
+                    break
+            return alpha, move
+
+        else:
+            for move in g.ValidMoves():
+                nextBoard = g.NextBoardPosition(move)
+                beta = min(beta, MainHandler.alphabeta(self, depth-1, g, alpha, beta,countOfPiece, True, move, nextBoard))
+                if alpha >= beta:
+                    break
+            return beta, move
+
+
+
+    def firstHalfMaxMin2(self, g, depth, isBlack, nextBoard):
 
         if (depth <= 0):
             return MainHandler.firstHalfCalcScore(self, g, nextBoard)
@@ -193,7 +226,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         bestMove = {"Where": [1, 1]}
         for move in g.ValidMoves():
             nextBoard = g.NextBoardPosition(move)
-            maxMinScore = MainHandler.firstHalfMaxMin(self, g, depth-1, isBlack, nextBoard, countOfPiece)
+            maxMinScore = MainHandler.firstHalfMaxMin(self, g, depth-1, isBlack, nextBoard)
 
             x = move["Where"][0]
             y = move["Where"][1]
@@ -212,7 +245,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         return score, bestMove
 
 
-    def latterHalfMaxMin(self, g, depth, isBlack, nextBoard, countOfPiece):
+    def latterHalfMaxMin(self, g, depth, isBlack, nextBoard):
 
         if (depth <= 0): 
             return MainHandler.latterHalfCalcScore(self, g)
@@ -225,7 +258,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         bestMove = {"Where": [1, 1]}
         for move in g.ValidMoves():
             nextBoard = g.NextBoardPosition(move)
-            maxMinScore = MainHandler.latterHalfMaxMin(self, g, depth-1, isBlack, nextBoard, countOfPiece)
+            maxMinScore = MainHandler.latterHalfMaxMin(self, g, depth-1, isBlack, nextBoard)
 
             x = move["Where"][0]
             y = move["Where"][1]
@@ -248,7 +281,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         black = 0
         white = 0
-        scores = [200,20,20,20,20,20,20,200],[20, 0, 3, 3, 3, 3, 0, 20],[20, 3, 3, 3, 3, 3, 3, 20],[20, 3, 3, 3, 3, 3, 3, 20],[20, 3, 3, 3, 3, 3, 3, 20],[20, 3, 3, 3, 3, 3, 3, 20],[20, 0, 3, 3, 3, 3, 0, 20],[200,20,20,20,20,20,20,200]
+        scores = [200,30,30,30,30,30,30,200],[30, 3, 3, 3, 3, 3, 3, 30],[30, 3, 10, 10, 10, 10, 3, 30],[30, 3, 10, 3, 3, 10, 3, 30],[30, 3, 10, 3, 3, 10, 3, 30],[30, 3, 10, 10, 10, 10, 3, 30],[30, 3, 3, 3, 3, 3, 3, 30],[200,30,30,30,30,30,30,200]
         for i in range(8):
             for j in range(8):
                 if Game.Pos(nextBoard, i, j) == 1:
@@ -258,8 +291,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return black- white
 
-    def latterHalfCalcScore(self, g):
-        return g.ValidMoves()
+    def latterHalfCalcScore(self, g, nextBoard):
+        return g.ValidMoves(nextBoard)
         
 
 app = webapp2.WSGIApplication([
