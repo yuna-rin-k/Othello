@@ -174,7 +174,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             move = {"Where": [1, 1]}
             nextBoard = g.NextBoardPosition(move)
 
-            (score, move) = MainHandler.maxmin(self, g, 5, countOfPiece, move, nextBoard)
+            (score, move) = MainHandler.maxmin(self, g, 4, countOfPiece, move, nextBoard)
             self.response.write(PrettyMove(move))
 
 
@@ -221,7 +221,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             return -100000
 
         if MainHandler.isEdge(self, move):
-            return 10000
+            return 20000
 
          
         numOfValiedMoves = len(g.ValidMoves()) * 5
