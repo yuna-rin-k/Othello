@@ -6,7 +6,7 @@ import json
 import logging
 import random
 import webapp2
-
+import time
 
 # Reads json description of the board and provides simple interface.
 class Game:
@@ -173,31 +173,28 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
             move = {"Where": [1, 1]}
             nextBoard = g.NextBoardPosition(move)
-            #if countOfPiece <=40 :
-                #(score, move) = MainHandler.firstHalfMaxMin(self, g, 4, True, move)
-            #else :
-                #(score, move) = MainHandler.firstHalfMaxMin(self, g, 5, True, move)
 
-
-            (score, move) = MainHandler.maxmin(self, g, 7, countOfPiece, move, nextBoard)
+            (score, move) = MainHandler.maxmin(self, g, 5, countOfPiece, move, nextBoard)
             self.response.write(PrettyMove(move))
 
 
     def maxmin(self, g, depth, countOfPiece, move, nextBoard):
-        return MainHandler.alphabeta(self, depth, g, -100000, 100000, countOfPiece, True, move, nextBoard)
+        firstMove = {"Where":[0,0]}
+        return MainHandler.alphabeta(self, depth, g, -100000000, 1000000000, countOfPiece, True, move, nextBoard)
 
 
     def alphabeta(self, depth, g, alpha, beta, countOfPiece, isBlack, move, nextBoard):
+
+
         if depth == 0:
-            #if countOfPiece <= 40:
-                return MainHandler.firstHalfCalcScore(self, g, nextBoard), move
-            #else:
-                #return MainHandler.latterHalfCalcScore(self, g), move
+        
+            return MainHandler.calcScore(self, g, move, nextBoard), move
 
         if isBlack:
             for move in g.ValidMoves():
                 nextBoard = g.NextBoardPosition(move)
-                alpha = max(alpha, (MainHandler.alphabeta(self, depth-1, g, alpha, beta, countOfPiece, False, move, nextBoard)))
+                (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, g, alpha, beta, countOfPiece, False, move, nextBoard)
+                alpha = max(alpha, alpha0)
                 if alpha >= beta:
                     break
             return alpha, move
@@ -205,95 +202,114 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         else:
             for move in g.ValidMoves():
                 nextBoard = g.NextBoardPosition(move)
-                beta = min(beta, MainHandler.alphabeta(self, depth-1, g, alpha, beta,countOfPiece, True, move, nextBoard))
+                (beta0, move0) = MainHandler.alphabeta(self, depth-1, g, alpha, beta,countOfPiece, True, move, nextBoard)
+                beta = min(beta, beta0)
                 if alpha >= beta:
                     break
             return beta, move
 
 
+    def calcScore(self, g, move, nextBoard):
 
-    def firstHalfMaxMin2(self, g, depth, isBlack, nextBoard):
+        if MainHandler.isAngle(self, move):
+            return 6000000
 
-        if (depth <= 0):
-            return MainHandler.firstHalfCalcScore(self, g, nextBoard)
-
-
-        if isBlack:
-            score = -100
-        else:
-            score = 100
-
-        bestMove = {"Where": [1, 1]}
-        for move in g.ValidMoves():
-            nextBoard = g.NextBoardPosition(move)
-            maxMinScore = MainHandler.firstHalfMaxMin(self, g, depth-1, isBlack, nextBoard)
-
+        if MainHandler.ngPos(self, move, g):
             x = move["Where"][0]
             y = move["Where"][1]
+            #print(x)
+            #print(y)
+            return -1000000
 
-            if isBlack:
-                if score < maxMinScore:
-                    score = maxMinScore
-                    bestMove = {"Where": [x, y]}
-                isBlack = False
-            else:
-                if score > maxMinScore:
-                    score = maxMinScore
-                    bestMove = {"Where": [x, y]}
-                isBlack = True
+        if MainHandler.isEdge(self, move):
+            #print('isEdge')
+            return 10000
 
-        return score, bestMove
-
-
-    def latterHalfMaxMin(self, g, depth, isBlack, nextBoard):
-
-        if (depth <= 0): 
-            return MainHandler.latterHalfCalcScore(self, g)
-
-        if isBlack:
-            score = -100
-        else:
-            score = 100
-
-        bestMove = {"Where": [1, 1]}
-        for move in g.ValidMoves():
-            nextBoard = g.NextBoardPosition(move)
-            maxMinScore = MainHandler.latterHalfMaxMin(self, g, depth-1, isBlack, nextBoard)
-
-            x = move["Where"][0]
-            y = move["Where"][1]
-
-            if isBlack:
-                if score < maxMinScore:
-                    score = maxMinScore
-                    bestMove = {"Where": [x, y]}
-                isBlack = False
-            else:
-                if score > maxMinScore:
-                    score = maxMinScore
-                    bestMove = {"Where": [x, y]}
-                isBlack = True
-
-        return score, bestMove
+         
+        numOfValiedMoves = len(g.ValidMoves()) * 5
+        pieceScore = MainHandler.calcPieceScore(self, g, nextBoard)
+        score = numOfValiedMoves + pieceScore
+        #print('score')
+        return score+500
 
 
-    def firstHalfCalcScore(self, g, nextBoard):
+    def calcPieceScore(self, g, nextBoard):
 
-        black = 0
-        white = 0
-        scores = [200,30,30,30,30,30,30,200],[30, 3, 3, 3, 3, 3, 3, 30],[30, 3, 10, 10, 10, 10, 3, 30],[30, 3, 10, 3, 3, 10, 3, 30],[30, 3, 10, 3, 3, 10, 3, 30],[30, 3, 10, 10, 10, 10, 3, 30],[30, 3, 3, 3, 3, 3, 3, 30],[200,30,30,30,30,30,30,200]
+        black = 0  #1                                 #2                                          #3                                #4                                  #5                                  #6                              #7
+        scores = [200,-100,50,50,50,50,-100,200],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[200,-100,60,60,60,60,-100,200]
         for i in range(8):
             for j in range(8):
-                if Game.Pos(nextBoard, i, j) == 1:
+                if Game.Pos(nextBoard,i, j) == 1:
                     black = black + scores[i][j]
-                else:
-                    white = white + scores[i][j]
 
-        return black- white
+        return black
 
-    def latterHalfCalcScore(self, g, nextBoard):
-        return g.ValidMoves(nextBoard)
-        
+    
+    def isAngle(self,move):
+
+        x = move["Where"][0]
+        y = move["Where"][1]
+
+        if x == 1 and y == 1:
+            return True
+        if x == 1 and y == 8:
+            return True
+        if x == 8 and y == 1:
+            return True
+        if x == 8 and y == 8:
+            return True
+        return False
+
+    def isEdge(self, move):
+        x = move["Where"][0]
+        y = move["Where"][1]
+        if x == 1 or x == 8 or y == 1 or y == 8:
+            return True
+        return False
+
+    def ngPos(self, move, g):
+
+        x = move["Where"][0]
+        y = move["Where"][1]
+
+        if x == 2 and y == 2:
+            return True
+
+        if x == 2 and y == 7:
+            return True
+
+        if x == 7 and y == 2:
+             return True
+
+        if x == 7 and y == 7:
+            return True
+
+        if MainHandler.isEdge(self, move):
+            #○●
+            if y == 1 or y == 8:
+                if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
+                #if Game.Pos(nextBoard, x-1, y) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard,x+1, y) == 0 and Game.Pos(nextBoard, x-1, y) != 0:
+                    return True
+
+                if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
+                #if Game.Pos(nextBoard, x+1, y) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard,  x-1, y) == 0 and Game.Pos(nextBoard, x+1, y) != 0:
+                    return True
+
+            if x == 1 or x == 8:
+                if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
+                    #print('ng')
+                    #print(y)
+                #if Game.Pos(nextBoard, x, y+1) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard, x, y-1) == 0 and Game.Pos(nextBoard, x, y+1) != 0:
+                    return True
+
+                if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
+                    #print('ng2')
+                    #print(y)
+                #if Game.Pos(nextBoard, x, y-1) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard, x, y+1) == 0 and Game.Pos(nextBoard, x, y-1) != 0:
+                    return True
+
+        return False
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
