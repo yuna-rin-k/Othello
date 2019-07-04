@@ -215,21 +215,15 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             return 6000000
 
         if MainHandler.ngPos(self, move, g):
-            x = move["Where"][0]
-            y = move["Where"][1]
-            #print(x)
-            #print(y)
             return -1000000
 
         if MainHandler.isEdge(self, move):
-            #print('isEdge')
             return 10000
 
          
         numOfValiedMoves = len(g.ValidMoves()) * 5
         pieceScore = MainHandler.calcPieceScore(self, g, nextBoard)
         score = numOfValiedMoves + pieceScore
-        #print('score')
         return score+500
 
 
@@ -288,24 +282,16 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             #○●
             if y == 1 or y == 8:
                 if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
-                #if Game.Pos(nextBoard, x-1, y) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard,x+1, y) == 0 and Game.Pos(nextBoard, x-1, y) != 0:
                     return True
 
                 if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
-                #if Game.Pos(nextBoard, x+1, y) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard,  x-1, y) == 0 and Game.Pos(nextBoard, x+1, y) != 0:
                     return True
 
             if x == 1 or x == 8:
                 if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
-                    #print('ng')
-                    #print(y)
-                #if Game.Pos(nextBoard, x, y+1) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard, x, y-1) == 0 and Game.Pos(nextBoard, x, y+1) != 0:
                     return True
 
                 if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
-                    #print('ng2')
-                    #print(y)
-                #if Game.Pos(nextBoard, x, y-1) != Game.Pos(nextBoard, x, y) and Game.Pos(nextBoard, x, y+1) == 0 and Game.Pos(nextBoard, x, y-1) != 0:
                     return True
 
         return False
