@@ -285,17 +285,21 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         if MainHandler.isEdge(self, move):
             #○●
             if y == 1 or y == 8:
-                if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
+                #if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
+                if g.Pos(x-1, y) == 2:
                     return True
 
-                if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
+                #if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
+                if g.Pos(x+1, y) == 2:
                     return True
 
             if x == 1 or x == 8:
-                if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
+                #if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
+                if g.Pos(x, y+1) == 2:
                     return True
 
-                if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
+                #if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
+                if g.Pos(x, y-1) == 2: 
                     return True
 
         return False
@@ -330,6 +334,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             return True
 
         return False
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
