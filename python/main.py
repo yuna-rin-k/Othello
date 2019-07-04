@@ -212,10 +212,13 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     def calcScore(self, g, move, nextBoard):
 
         if MainHandler.isAngle(self, move):
-            return 6000000
+            return 7000000
 
         if MainHandler.ngPos(self, move, g):
             return -1000000
+
+        if MainHandler.ngPos_2(self, move):
+            return -100000
 
         if MainHandler.isEdge(self, move):
             return 10000
@@ -278,6 +281,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         if x == 7 and y == 7:
             return True
 
+
         if MainHandler.isEdge(self, move):
             #○●
             if y == 1 or y == 8:
@@ -296,6 +300,36 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return False
 
+    def ngPos_2(self, move):
+
+        x = move["Where"][0]
+        y = move["Where"][1]
+
+        if x == 1 and y == 2:
+            return True
+
+        if x == 1 and y == 7:
+            return True
+
+        if x == 2 and y == 1:
+            return True
+
+        if x == 2 and y == 8:
+            return True
+
+        if x == 7 and y == 1:
+            return True
+
+        if x == 7 and y == 8:
+            return True
+
+        if x == 8 and y == 2:
+            return True
+
+        if x == 8 and y == 7:
+            return True
+
+        return False
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
