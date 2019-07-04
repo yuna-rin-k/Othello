@@ -187,7 +187,10 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
 
         if depth == 0:
-        
+            
+            if countOfPiece >= 56 :
+                return MainHandler.lastPos(self, nextBoard), move
+
             return MainHandler.calcScore(self, g, move, nextBoard), move
 
         if isBlack:
@@ -212,22 +215,25 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     def calcScore(self, g, move, nextBoard):
 
         if MainHandler.isAngle(self, move):
-            return 7000000
+            return 7000
 
         if MainHandler.ngPos(self, move, g):
-            return -1000000
+            return -1000
 
         if MainHandler.ngPos_2(self, move):
-            return -100000
+            return -1000
+
+        if MainHandler.ngPos_3(self, move,nextBoard):
+            return -1000
 
         if MainHandler.isEdge(self, move):
-            return 20000
+            return 2000
 
          
         numOfValiedMoves = len(g.ValidMoves()) * 5
         pieceScore = MainHandler.calcPieceScore(self, g, nextBoard)
         score = numOfValiedMoves + pieceScore
-        return score+500
+        return score
 
 
     def calcPieceScore(self, g, nextBoard):
@@ -284,25 +290,42 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         if MainHandler.isEdge(self, move):
             #○●
-            if y == 1 or y == 8:
-                #if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
-                if g.Pos(x-1, y) == 2:
-                    return True
+            player = move["As"]
+            if player == 1:
+                if y == 1 or y == 8:
+                    #if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
+                    if g.Pos(x-1, y) == 2:
+                        return True
 
-                #if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
-                if g.Pos(x+1, y) == 2:
-                    return True
+                    #if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
+                    if g.Pos(x+1, y) == 2:
+                        return True
 
-            if x == 1 or x == 8:
-                #if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
-                if g.Pos(x, y+1) == 2:
-                    return True
+                if x == 1 or x == 8:
+                    #if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
+                    if g.Pos(x, y+1) == 2:
+                        return True
 
-                #if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
-                if g.Pos(x, y-1) == 2: 
-                    return True
+                    #if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
+                    if g.Pos(x, y-1) == 2: 
+                        return True
+
+            elif player == 2:
+                if y == 1 or y == 8:
+                    if g.Pos(x-1, y) == 1:
+                        return True
+                    if g.Pos(x+1, y) == 1:
+                        return True
+
+                if x == 1 or x == 8:
+                    if g.Pos(x, y+1) == 2:
+                        return True
+                    if g.Pos(x, y-1) == 2: 
+                        return True
 
         return False
+
+
 
     def ngPos_2(self, move):
 
@@ -335,6 +358,60 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return False
 
+    def ngPos_3(self, move, nextBoard):
+
+        player = move["As"]
+        if player == 1:
+            if Game.Pos(nextBoard,1,1) == 0:
+                if Game.Pos(nextBoard,1,2) == 1 or Game.Pos(nextBoard,2,1) == 1 or Game.Pos(nextBoard,2,2)==  1:
+                    return True
+
+            if Game.Pos(nextBoard,8,8) == 0:
+                if Game.Pos(nextBoard,8,7) == 1 or Game.Pos(nextBoard,7,8) == 1 or Game.Pos(nextBoard,7,7) == 1:
+                    return True
+
+            if Game.Pos(nextBoard,1,8) == 0:
+                if Game.Pos(nextBoard,1,7) == 1 or Game.Pos(nextBoard,2,8) == 1 or Game.Pos(nextBoard,2,7) == 1:
+                    print('test')
+                    return True
+
+            if Game.Pos(nextBoard,8,1) == 0:
+                if Game.Pos(nextBoard,7,1) == 1 or Game.Pos(nextBoard,7,2) == 1 or Game.Pos(nextBoard,8,2) == 1:
+                    return True
+
+        elif player == 2:
+
+            if Game.Pos(nextBoard,1,1) == 0:
+                if Game.Pos(nextBoard,1,2) == 2 or Game.Pos(nextBoard,2,1) == 2 or Game.Pos(nextBoard,2,2)==  2:
+                    return True
+
+            if Game.Pos(nextBoard,8,8) == 0:
+                if Game.Pos(nextBoard,8,7) == 2 or Game.Pos(nextBoard,7,8) == 2 or Game.Pos(nextBoard,7,7) == 2:
+                    return True
+
+            if Game.Pos(nextBoard,1,8) == 0:
+                if Game.Pos(nextBoard,1,7) == 2 or Game.Pos(nextBoard,2,8) == 2 or Game.Pos(nextBoard,2,7) == 2:
+                    print('test')
+                    return True
+
+            if Game.Pos(nextBoard,8,1) == 0:
+                if Game.Pos(nextBoard,7,1) == 2 or Game.Pos(nextBoard,7,2) == 2 or Game.Pos(nextBoard,8,2) == 2:
+                    return True
+
+        return False
+
+    def lastPos(self, nextBoard):
+
+        black = 0
+        white = 0
+        for i in range(8):
+            for j in range(8):
+                if Game.Pos(nextBoard,i,j) == 1:
+                    black = black + 1
+                if Game.Pos(nextBoard,i,j) == 2:
+                    white = white + 1
+
+        return black - white
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
