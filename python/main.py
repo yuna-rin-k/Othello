@@ -269,18 +269,31 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     #use myUpdataBoardDirection
     #return newBoard
     def makeNewBoard(self, currentBoard, move, player):
-        board = [[]]
+        board = [[0]*9]*9
         x = move["Where"][0]
         y = move["Where"][1]
         
-        #noChangedBoard = currentBoard
         board = MainHandler.myUpdateBoardDirection(self, currentBoard, x, y, 1, 0, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, 0, 1, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, 0, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, 0, -1, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, 1, 1, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, 1, -1, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, 1, player)
+        if board != currentBoard:
+            print('changed!')
         board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, -1, player)
 
         if board == currentBoard:
@@ -302,6 +315,13 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         flip_list = []
 
 
+        newBoard =[[0]*9]*9
+
+        for i in xrange(1,9):
+            for j in xrange(1,9):
+                newBoard[i][j] = board[i][j]
+
+
         while MainHandler.myPos(self, board, look_x, look_y) == opponent:
             flip_list.append([look_x, look_y])
             look_x += delta_x
@@ -311,13 +331,21 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                         # pieces between our own pieces at
                         # [look_x,look_y] and the newly placed one at
                         # [x,y], making it a legal move.
-            print('if')
+            #print('if')
+            #print(board[y][x])
             newBoard = MainHandler.mySetPos(self, board, x, y, player)
+            #print('new')
+            #print(newBoard[y][x])
             for flip_move in flip_list:
+                #print('flip_move')
                 flip_x = flip_move[0]
                 flip_y = flip_move[1]
                 newBoard = MainHandler.mySetPos(self, newBoard, flip_x, flip_y, player)
+    
+            print('return newBoard')
+
             return newBoard
+
         return board
 
 
@@ -327,7 +355,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         #print(board[y-1][x-1])
         if 1 <= x and x <= 8 and 1 <= y and y <= 8:
             #return board[y-1][x-1]
-            return board[y-1][x-1]
+            return board[y][x]
         return -1
 
 
@@ -335,7 +363,10 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         if x < 1 or 8 < x or y < 1 or 8 < y:
             return False
         #board[y-1][x-1] = player
-        board[y-1][x-1] = player
+        #print('mySetPos board')
+        #print(board[y][x])
+        board[y][x] = player
+        #print(board[y][x])
         return board
 
 
