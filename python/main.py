@@ -164,254 +164,225 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 # more clever than just picking a random move.
 
             #move = random.choice(valid_moves)
-
             countOfPiece = 0
             for i in range(8):
                 for j in range(8):
                     if g.Pos(i, j) != 0:
                         countOfPiece = countOfPiece + 1
+            
+            initBoard = [[0]*9]*9
+            for i in xrange(1,9):
+                for j in xrange(1,9):
+                    initBoard[i][j] = 0
 
-            move = {"Where": [1, 1]}
-            nextBoard = g.NextBoardPosition(move)
+            initBoard[4][4] = 2
+            initBoard[4][5] = 1
+            initBoard[5][4] = 1
+            initBoard[5][5] = 2
 
-            (score, move) = MainHandler.maxmin(self, g, 4, countOfPiece, move, nextBoard)
+            #initBoard = MainHandler.makeInitBoard(self)
+            #initBoard[4][4] = 100
+
+            (score, move) = MainHandler.maxmin(self, 2, g, countOfPiece, initBoard, g.Next())
             self.response.write(PrettyMove(move))
 
+    def makeInitBoard(self):
 
-    def maxmin(self, g, depth, countOfPiece, move, nextBoard):
-        firstMove = {"Where":[0,0]}
-        return MainHandler.alphabeta(self, depth, g, -100000000, 1000000000, countOfPiece, True, move, nextBoard)
+        initBoard = [[0]*9]*9
+
+        for y in xrange(1,9):
+            for x in xrange(1,9):
+                if  x == 4 and y == 4:
+                    initBoard[y][x] = 2
+
+                elif x == 4 and y == 5:
+                    initBoard[y][x] == 1
+
+                elif x == 5 and y == 4:
+                    initBoard[y][x] = 1
+
+                elif x == 5 and y == 5:
+                    initBoard[y][x] = 2
+
+                else:
+                    initBoard[y][x] = 0
+        return initBoard
+
+    def maxmin(self, depth, g, countOfPiece, initBoard, player):
+        move = {"Where":[0,0]}
+        return MainHandler.alphabeta(self, depth, g, -100000000, 1000000000, countOfPiece, True, initBoard, player,move)
 
 
-    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isBlack, move, nextBoard):
-
+    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isMe, board, player, move):
 
         if depth == 0:
-            
-            if countOfPiece >= 56 :
-                return MainHandler.lastPos(self, nextBoard), move
+            if countOfPiece >= 58 :
+                return MainHandler.lastPos(self, g,board, player), move
+            return MainHandler.calcScore(self,g,board, player), move
 
-            return MainHandler.calcScore(self, g, move, nextBoard), move
+        #nextBoard →　moves (nextValidMoves)
+        #moves　→　move
+        #move →　nextBoard
+        #alphabeta()
 
-        if isBlack:
-            for move in g.ValidMoves():
-                nextBoard = g.NextBoardPosition(move)
-                (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, g, alpha, beta, countOfPiece, False, move, nextBoard)
+        
+        if isMe:
+            moves = MainHandler.myValidMoves(self, board, player)
+            print('len')
+            print(len(moves))
+            for move in moves:
+                newBoard = MainHandler.makeNewBoard(self, board, move, player)
+                (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, g, alpha, beta, countOfPiece, False, newBoard, 3-player, move)
                 alpha = max(alpha, alpha0)
                 if alpha >= beta:
                     break
             return alpha, move
 
         else:
-            for move in g.ValidMoves():
-                nextBoard = g.NextBoardPosition(move)
-                (beta0, move0) = MainHandler.alphabeta(self, depth-1, g, alpha, beta,countOfPiece, True, move, nextBoard)
+            #print('Board★')
+            #print(board[4][4])
+            moves = MainHandler.myValidMoves(self, board, player)
+            print('LEN')
+            print(len(moves))
+            for move in moves:
+                newBoard = MainHandler.makeNewBoard(self, board, move, player)
+                (beta0, move0) = MainHandler.alphabeta(self, depth-1, g, alpha, beta,countOfPiece, True, newBoard, 3-player, move)
                 beta = min(beta, beta0)
                 if alpha >= beta:
                     break
             return beta, move
 
 
-    def calcScore(self, g, move, nextBoard):
 
-        if MainHandler.isAngle(self, move):
-            return 7000
-
-        if MainHandler.ngPos(self, move, g):
-            return -1000
-
-        if MainHandler.ngPos_2(self, move):
-            return -1000
-
-        if MainHandler.ngPos_3(self, move,nextBoard):
-            return -1000
-
-        if MainHandler.isEdge(self, move):
-            return 2000
-
-         
-        numOfValiedMoves = len(g.ValidMoves()) * 5
-        pieceScore = MainHandler.calcPieceScore(self, g, nextBoard)
-        score = numOfValiedMoves + pieceScore
-        return score
+    def myValidMoves(self, board, player):
+        moves = []
+        for y in xrange(1,9):
+            for x in xrange(1,9):
+                move = {"Where":[x,y]}
+                if MainHandler.makeNewBoard(self,board,move,player) is not None:
+                    moves.append(move)
+        print('move s len')
+        print(len(moves))
+        return moves
 
 
-    def calcPieceScore(self, g, nextBoard):
+    #use myUpdataBoardDirection
+    #return newBoard
+    def makeNewBoard(self, currentBoard, move, player):
+        board = [[]]
+        x = move["Where"][0]
+        y = move["Where"][1]
+        
+        #noChangedBoard = currentBoard
+        board = MainHandler.myUpdateBoardDirection(self, currentBoard, x, y, 1, 0, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 0, 1, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, 0, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 0, -1, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 1, 1, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 1, -1, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, 1, player)
+        board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, -1, player)
 
-        black = 0  #1                                 #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [200,-100,50,50,50,50,-100,200],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[200,-100,60,60,60,60,-100,200]
+        if board == currentBoard:
+            return None
+        #isChanged = False
+        #for i in
+
+        print('changed')
+        return board
+
+
+
+    #use myPos and mySetPos
+    #return newBoard
+    def myUpdateBoardDirection(self, board, x, y, delta_x, delta_y, player):
+        opponent = 3 - player
+        look_x = x + delta_x
+        look_y = y + delta_y
+        flip_list = []
+
+
+        while MainHandler.myPos(self, board, look_x, look_y) == opponent:
+            flip_list.append([look_x, look_y])
+            look_x += delta_x
+            look_y += delta_y
+        if MainHandler.myPos(self, board, look_x, look_y) == player and len(flip_list) > 0:
+                        # there's a continuous line of our opponents
+                        # pieces between our own pieces at
+                        # [look_x,look_y] and the newly placed one at
+                        # [x,y], making it a legal move.
+            print('if')
+            newBoard = MainHandler.mySetPos(self, board, x, y, player)
+            for flip_move in flip_list:
+                flip_x = flip_move[0]
+                flip_y = flip_move[1]
+                newBoard = MainHandler.mySetPos(self, newBoard, flip_x, flip_y, player)
+            return newBoard
+        return board
+
+
+
+    def myPos(self, board, x, y):
+        #print('board')
+        #print(board[y-1][x-1])
+        if 1 <= x and x <= 8 and 1 <= y and y <= 8:
+            #return board[y-1][x-1]
+            return board[y-1][x-1]
+        return -1
+
+
+    def mySetPos(self, board, x, y, player):
+        if x < 1 or 8 < x or y < 1 or 8 < y:
+            return False
+        #board[y-1][x-1] = player
+        board[y-1][x-1] = player
+        return board
+
+
+
+    def calcScore(self,g,nextBoard, player):
+
+        #numOfValiedMoves = len(g.ValidMoves()) * 5
+        pieceScore = MainHandler.calcPieceScore(self, g, nextBoard, player)
+        #score = numOfValiedMoves + pieceScore
+        #return score
+        return pieceScore
+
+
+    def calcPieceScore(self, g, nextBoard, player):
+
+        black = 0 
+        white = 0
+                      #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
+        scores = [300,-100,50,50,50,50,-100,300],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[300,-100,60,60,60,60,-100,300]
         for i in range(8):
             for j in range(8):
-                if Game.Pos(nextBoard,i, j) == 1:
+                if g.Pos(i, j) == 1:
                     black = black + scores[i][j]
+                elif g.Pos(i, j) == 2:
+                    white = white + scores[i][j]
 
-        return black
-
-    
-    def isAngle(self,move):
-
-        x = move["Where"][0]
-        y = move["Where"][1]
-
-        if x == 1 and y == 1:
-            return True
-        if x == 1 and y == 8:
-            return True
-        if x == 8 and y == 1:
-            return True
-        if x == 8 and y == 8:
-            return True
-        return False
-
-    def isEdge(self, move):
-        x = move["Where"][0]
-        y = move["Where"][1]
-        if x == 1 or x == 8 or y == 1 or y == 8:
-            return True
-        return False
-
-    def ngPos(self, move, g):
-
-        x = move["Where"][0]
-        y = move["Where"][1]
-
-        if x == 2 and y == 2:
-            return True
-
-        if x == 2 and y == 7:
-            return True
-
-        if x == 7 and y == 2:
-             return True
-
-        if x == 7 and y == 7:
-            return True
-
-
-        if MainHandler.isEdge(self, move):
-            #○●
-            player = move["As"]
-            if player == 1:
-                if y == 1 or y == 8:
-                    #if g.Pos(x-1, y) != g.Pos(x, y) and g.Pos(x+1, y) == 0 and g.Pos(x-1, y) != 0:
-                    if g.Pos(x-1, y) == 2:
-                        return True
-
-                    #if g.Pos(x+1, y) != g.Pos(x, y) and g.Pos( x-1, y) == 0 and g.Pos(x+1, y) != 0:
-                    if g.Pos(x+1, y) == 2:
-                        return True
-
-                if x == 1 or x == 8:
-                    #if g.Pos(x, y+1) != g.Pos(x, y) and g.Pos(x, y-1) == 0 and g.Pos(x, y+1) != 0:
-                    if g.Pos(x, y+1) == 2:
-                        return True
-
-                    #if g.Pos(x, y-1) != g.Pos(x, y) and g.Pos(x, y+1) == 0 and g.Pos(x, y-1) != 0: 
-                    if g.Pos(x, y-1) == 2: 
-                        return True
-
-            elif player == 2:
-                if y == 1 or y == 8:
-                    if g.Pos(x-1, y) == 1:
-                        return True
-                    if g.Pos(x+1, y) == 1:
-                        return True
-
-                if x == 1 or x == 8:
-                    if g.Pos(x, y+1) == 2:
-                        return True
-                    if g.Pos(x, y-1) == 2: 
-                        return True
-
-        return False
-
-
-
-    def ngPos_2(self, move):
-
-        x = move["Where"][0]
-        y = move["Where"][1]
-
-        if x == 1 and y == 2:
-            return True
-
-        if x == 1 and y == 7:
-            return True
-
-        if x == 2 and y == 1:
-            return True
-
-        if x == 2 and y == 8:
-            return True
-
-        if x == 7 and y == 1:
-            return True
-
-        if x == 7 and y == 8:
-            return True
-
-        if x == 8 and y == 2:
-            return True
-
-        if x == 8 and y == 7:
-            return True
-
-        return False
-
-    def ngPos_3(self, move, nextBoard):
-
-        player = move["As"]
         if player == 1:
-            if Game.Pos(nextBoard,1,1) == 0:
-                if Game.Pos(nextBoard,1,2) == 1 or Game.Pos(nextBoard,2,1) == 1 or Game.Pos(nextBoard,2,2)==  1:
-                    return True
+            return black - white
 
-            if Game.Pos(nextBoard,8,8) == 0:
-                if Game.Pos(nextBoard,8,7) == 1 or Game.Pos(nextBoard,7,8) == 1 or Game.Pos(nextBoard,7,7) == 1:
-                    return True
+        return white - black
 
-            if Game.Pos(nextBoard,1,8) == 0:
-                if Game.Pos(nextBoard,1,7) == 1 or Game.Pos(nextBoard,2,8) == 1 or Game.Pos(nextBoard,2,7) == 1:
-                    print('test')
-                    return True
-
-            if Game.Pos(nextBoard,8,1) == 0:
-                if Game.Pos(nextBoard,7,1) == 1 or Game.Pos(nextBoard,7,2) == 1 or Game.Pos(nextBoard,8,2) == 1:
-                    return True
-
-        elif player == 2:
-
-            if Game.Pos(nextBoard,1,1) == 0:
-                if Game.Pos(nextBoard,1,2) == 2 or Game.Pos(nextBoard,2,1) == 2 or Game.Pos(nextBoard,2,2)==  2:
-                    return True
-
-            if Game.Pos(nextBoard,8,8) == 0:
-                if Game.Pos(nextBoard,8,7) == 2 or Game.Pos(nextBoard,7,8) == 2 or Game.Pos(nextBoard,7,7) == 2:
-                    return True
-
-            if Game.Pos(nextBoard,1,8) == 0:
-                if Game.Pos(nextBoard,1,7) == 2 or Game.Pos(nextBoard,2,8) == 2 or Game.Pos(nextBoard,2,7) == 2:
-                    print('test')
-                    return True
-
-            if Game.Pos(nextBoard,8,1) == 0:
-                if Game.Pos(nextBoard,7,1) == 2 or Game.Pos(nextBoard,7,2) == 2 or Game.Pos(nextBoard,8,2) == 2:
-                    return True
-
-        return False
-
-    def lastPos(self, nextBoard):
+   
+    def lastPos(self, g, nextBoard, player):
 
         black = 0
         white = 0
         for i in range(8):
             for j in range(8):
-                if Game.Pos(nextBoard,i,j) == 1:
+                if g.Pos(i,j) == 1:
                     black = black + 1
-                if Game.Pos(nextBoard,i,j) == 2:
+                if g.Pos(i,j) == 2:
                     white = white + 1
 
-        return black - white
+        if player == 1:
+            return black - white
+
+        return white - black
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
