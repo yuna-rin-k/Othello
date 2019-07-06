@@ -191,7 +191,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             #if countOfPiece <= 18:
                 #return MainHandler.earlyStageScore(self, g, prev_g, player), move
             #if countOfPiece < 55:
-            if countOfPiece < 53:
+            if countOfPiece < 44:
                 return MainHandler.middleStageScore(self,g, player), move
             else:
                 return MainHandler.lateStageScore(self, g, player), move
@@ -222,8 +222,6 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         degreeOfFreedom = 0
         angle = 0
 
-        print('pos')
-        print(g.Pos(1,8))
         if player == 1:
 
             if g.Pos(1,1) == 1:
@@ -320,7 +318,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves*2
+        return pieceScore + numOfmoves*5
 
 
     #def pattern(self, g, player):
