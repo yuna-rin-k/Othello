@@ -165,227 +165,173 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
             #move = random.choice(valid_moves)
             countOfPiece = 0
-            for i in range(8):
-                for j in range(8):
-                    if g.Pos(i, j) != 0:
-                        countOfPiece = countOfPiece + 1
-            
-            initBoard = [[0]*9]*9
             for i in xrange(1,9):
                 for j in xrange(1,9):
-                    initBoard[i][j] = 0
-
-            initBoard[4][4] = 2
-            initBoard[4][5] = 1
-            initBoard[5][4] = 1
-            initBoard[5][5] = 2
-
-            #initBoard = MainHandler.makeInitBoard(self)
-            #initBoard[4][4] = 100
-
-            (score, move) = MainHandler.maxmin(self, 2, g, countOfPiece, initBoard, g.Next())
+                    if g.Pos(i, j) != 0:
+                        countOfPiece = countOfPiece + 1
+            begin = time.time()
+            (score, move) = MainHandler.maxmin(self, 4, g, g, countOfPiece, g.Next(), begin)
             self.response.write(PrettyMove(move))
 
-    def makeInitBoard(self):
 
-        initBoard = [[0]*9]*9
-
-        for y in xrange(1,9):
-            for x in xrange(1,9):
-                if  x == 4 and y == 4:
-                    initBoard[y][x] = 2
-
-                elif x == 4 and y == 5:
-                    initBoard[y][x] == 1
-
-                elif x == 5 and y == 4:
-                    initBoard[y][x] = 1
-
-                elif x == 5 and y == 5:
-                    initBoard[y][x] = 2
-
-                else:
-                    initBoard[y][x] = 0
-        return initBoard
-
-    def maxmin(self, depth, g, countOfPiece, initBoard, player):
+    def maxmin(self, depth, g, prev_g, countOfPiece, player, begin):
         move = {"Where":[0,0]}
-        return MainHandler.alphabeta(self, depth, g, -100000000, 1000000000, countOfPiece, True, initBoard, player,move)
+        return MainHandler.alphabeta(self, depth, g, prev_g, -100000000, 1000000000, countOfPiece, True, player,move, begin)
 
 
-    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isMe, board, player, move):
+    def alphabeta(self, depth, g, prev_g, alpha, beta, countOfPiece, isMe, player, move, begin):
 
-        if depth == 0:
-            if countOfPiece >= 58 :
-                return MainHandler.lastPos(self, g,board, player), move
-            return MainHandler.calcScore(self,g,board, player), move
+        end = time.time()
 
-        #nextBoard →　moves (nextValidMoves)
-        #moves　→　move
-        #move →　nextBoard
-        #alphabeta()
+        #if countOfPiece <= 12 and depth == 0:
+            #return MainHandler.earlyStageScore(self, g, prev_g, player), move
 
-        
+
+        if end - begin > 12.5:
+            #if countOfPiece <= 18:
+                #return MainHandler.earlyStageScore(self, g, prev_g, player), move
+            #if countOfPiece < 55:
+            if countOfPiece < 53:
+                return MainHandler.middleStageScore(self,g, player), move
+            else:
+                return MainHandler.lateStageScore(self, g, player), move
+
         if isMe:
-            moves = MainHandler.myValidMoves(self, board, player)
-            print('len')
-            print(len(moves))
+            moves = g.ValidMoves()
             for move in moves:
-                newBoard = MainHandler.makeNewBoard(self, board, move, player)
-                (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, g, alpha, beta, countOfPiece, False, newBoard, 3-player, move)
+                gameBoard = g.NextBoardPosition(move)
+                (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
                 alpha = max(alpha, alpha0)
                 if alpha >= beta:
                     break
             return alpha, move
 
         else:
-            #print('Board★')
-            #print(board[4][4])
-            moves = MainHandler.myValidMoves(self, board, player)
-            print('LEN')
-            print(len(moves))
+            moves = g.ValidMoves()
             for move in moves:
-                newBoard = MainHandler.makeNewBoard(self, board, move, player)
-                (beta0, move0) = MainHandler.alphabeta(self, depth-1, g, alpha, beta,countOfPiece, True, newBoard, 3-player, move)
+                gameBoard = g.NextBoardPosition(move)
+                (beta0, move0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta,countOfPiece, True, player, move, begin)
                 beta = min(beta, beta0)
                 if alpha >= beta:
                     break
             return beta, move
 
+    def earlyStageScore(self, g, prev_g, player):
+
+        turnOverPieces = []
+        degreeOfFreedom = 0
+        angle = 0
+
+        print('pos')
+        print(g.Pos(1,8))
+        if player == 1:
+
+            if g.Pos(1,1) == 1:
+                angle = angle + 100
+            if g.Pos(1,8) == 1:
+                print('1, 8')
+                angle = angle + 100
+                print(angle)
+            if g.Pos(8,1) == 1:
+                print('8, 1')
+                angle = angle + 100
+            if g.Pos(8,8) == 1:
+                angle = angle + 100
+
+            if g.Pos(1,1) == 2:
+                angle = angle - 100
+            if g.Pos(1,8) == 2:
+                angle = angle - 100
+            if g.Pos(8,1) == 2:
+                angle = angle - 100
+            if g.Pos(8,8) == 2:
+               angle = angle - 100
 
 
-    def myValidMoves(self, board, player):
-        moves = []
-        for y in xrange(1,9):
-            for x in xrange(1,9):
-                move = {"Where":[x,y]}
-                if MainHandler.makeNewBoard(self,board,move,player) is not None:
-                    moves.append(move)
-        print('move s len')
-        print(len(moves))
-        return moves
+            for i in xrange(1,9):
+                for j in xrange(1,9):
+                    if prev_g.Pos(i,j) == 1 and g.Pos(i,j) == 2:
+                        piece = {"Where":[j,i]}
+                        turnOverPieces.append(piece)
+
+        if player == 2:
+
+            if g.Pos(1,1) == 2:
+                angle = angle + 100
+            if g.Pos(1,8) == 2:
+                angle = angle + 100
+            if g.Pos(8,1) == 2:
+                angle = angle + 100
+            if g.Pos(8,8) == 2:
+                angle = angle + 100
+
+            if g.Pos(1,1) == 1:
+                angle = angle - 100
+            if g.Pos(1,8) == 1:
+                angle = angle - 100
+            if g.Pos(8,1) == 1:
+                angle = angle - 100
+            if g.Pos(8,8) == 1:
+                angle = angle - 100
 
 
-    #use myUpdataBoardDirection
-    #return newBoard
-    def makeNewBoard(self, currentBoard, move, player):
-        board = [[0]*9]*9
-        x = move["Where"][0]
-        y = move["Where"][1]
-        
-        board = MainHandler.myUpdateBoardDirection(self, currentBoard, x, y, 1, 0, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 0, 1, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, 0, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 0, -1, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 1, 1, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, 1, -1, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, 1, player)
-        if board != currentBoard:
-            print('changed!')
-        board = MainHandler.myUpdateBoardDirection(self, board, x, y, -1, -1, player)
-
-        if board == currentBoard:
-            return None
-        #isChanged = False
-        #for i in
-
-        print('changed')
-        return board
+            for i in xrange(1,9):
+                for j in xrange(1,9):
+                    if prev_g.Pos(i,j) == 2 and g.Pos(i,j) == 1:
+                        piece = {"Where":[j,i]}
+                        turnOverPieces.append(piece)
 
 
+        for piece in turnOverPieces:
 
-    #use myPos and mySetPos
-    #return newBoard
-    def myUpdateBoardDirection(self, board, x, y, delta_x, delta_y, player):
-        opponent = 3 - player
-        look_x = x + delta_x
-        look_y = y + delta_y
-        flip_list = []
+            x = piece["Where"][0]
+            y = piece["Where"][1]
 
+            if g.Pos(x+1,y) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
 
-        newBoard =[[0]*9]*9
+            if g.Pos(x,y+1) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
 
-        for i in xrange(1,9):
-            for j in xrange(1,9):
-                newBoard[i][j] = board[i][j]
+            if g.Pos(x-1,y) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
 
+            if g.Pos(x,y-1) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
 
-        while MainHandler.myPos(self, board, look_x, look_y) == opponent:
-            flip_list.append([look_x, look_y])
-            look_x += delta_x
-            look_y += delta_y
-        if MainHandler.myPos(self, board, look_x, look_y) == player and len(flip_list) > 0:
-                        # there's a continuous line of our opponents
-                        # pieces between our own pieces at
-                        # [look_x,look_y] and the newly placed one at
-                        # [x,y], making it a legal move.
-            #print('if')
-            #print(board[y][x])
-            newBoard = MainHandler.mySetPos(self, board, x, y, player)
-            #print('new')
-            #print(newBoard[y][x])
-            for flip_move in flip_list:
-                #print('flip_move')
-                flip_x = flip_move[0]
-                flip_y = flip_move[1]
-                newBoard = MainHandler.mySetPos(self, newBoard, flip_x, flip_y, player)
-    
-            print('return newBoard')
+            if g.Pos(x+1,y+1) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
 
-            return newBoard
+            if g.Pos(x-1,y+1) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
 
-        return board
+            if g.Pos(x+1,y-1) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
+
+            if g.Pos(x-1,y-1) == 0:
+                degreeOfFreedom = degreeOfFreedom + 1
+
+        print(angle)
+
+        return degreeOfFreedom + angle
 
 
+    def middleStageScore(self,g, player):
 
-    def myPos(self, board, x, y):
-        #print('board')
-        #print(board[y-1][x-1])
-        if 1 <= x and x <= 8 and 1 <= y and y <= 8:
-            #return board[y-1][x-1]
-            return board[y][x]
-        return -1
+        pieceScore = MainHandler.calcPieceScore(self, g, player)
+        numOfmoves = len(g.ValidMoves())
+        return pieceScore + numOfmoves*2
 
 
-    def mySetPos(self, board, x, y, player):
-        if x < 1 or 8 < x or y < 1 or 8 < y:
-            return False
-        #board[y-1][x-1] = player
-        #print('mySetPos board')
-        #print(board[y][x])
-        board[y][x] = player
-        #print(board[y][x])
-        return board
+    #def pattern(self, g, player):
 
 
-
-    def calcScore(self,g,nextBoard, player):
-
-        #numOfValiedMoves = len(g.ValidMoves()) * 5
-        pieceScore = MainHandler.calcPieceScore(self, g, nextBoard, player)
-        #score = numOfValiedMoves + pieceScore
-        #return score
-        return pieceScore
-
-
-    def calcPieceScore(self, g, nextBoard, player):
+    def calcPieceScore(self, g, player):
 
         black = 0 
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [300,-100,50,50,50,50,-100,300],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[300,-100,60,60,60,60,-100,300]
+        scores = [500,-100,50,50,50,50,-100,500],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[500,-100,60,60,60,60,-100,500]
         for i in range(8):
             for j in range(8):
                 if g.Pos(i, j) == 1:
@@ -398,8 +344,10 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return white - black
 
-   
-    def lastPos(self, g, nextBoard, player):
+
+
+
+    def lateStageScore(self, g, player):
 
         black = 0
         white = 0
