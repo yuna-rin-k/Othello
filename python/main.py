@@ -183,16 +183,15 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         end = time.time()
 
-        #if countOfPiece <= 12 and depth == 0:
-            #return MainHandler.earlyStageScore(self, g, prev_g, player), move
-
-
-        if end - begin > 12.5:
-            #if countOfPiece <= 18:
-                #return MainHandler.earlyStageScore(self, g, prev_g, player), move
-            #if countOfPiece < 55:
-            if countOfPiece < 44:
+        if end - begin > 12.2:
+        
+            if countOfPiece >= 22 and countOfPiece <=28:
+                return MainHandler.middleStageScore2(self, g, prev_g, player), move
+            elif countOfPiece <= 34:
                 return MainHandler.middleStageScore(self,g, player), move
+            #elif countOfPiece <= 44:
+            elif countOfPiece <= 52:
+                return MainHandler.middleStageScore3(self,g, player), move
             else:
                 return MainHandler.lateStageScore(self, g, player), move
 
@@ -216,69 +215,30 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                     break
             return beta, move
 
-    def earlyStageScore(self, g, prev_g, player):
+    
+    def middleStageScore(self, g, player):
+
+        pieceScore = MainHandler.calcPieceScore(self, g, player)
+        numOfmoves = len(g.ValidMoves())
+        return pieceScore + numOfmoves*7
+
+
+    def middleStageScore2(self, g, prev_g, player):
 
         turnOverPieces = []
         degreeOfFreedom = 0
-        angle = 0
-
         if player == 1:
-
-            if g.Pos(1,1) == 1:
-                angle = angle + 100
-            if g.Pos(1,8) == 1:
-                print('1, 8')
-                angle = angle + 100
-                print(angle)
-            if g.Pos(8,1) == 1:
-                print('8, 1')
-                angle = angle + 100
-            if g.Pos(8,8) == 1:
-                angle = angle + 100
-
-            if g.Pos(1,1) == 2:
-                angle = angle - 100
-            if g.Pos(1,8) == 2:
-                angle = angle - 100
-            if g.Pos(8,1) == 2:
-                angle = angle - 100
-            if g.Pos(8,8) == 2:
-               angle = angle - 100
-
-
             for i in xrange(1,9):
                 for j in xrange(1,9):
                     if prev_g.Pos(i,j) == 1 and g.Pos(i,j) == 2:
                         piece = {"Where":[j,i]}
                         turnOverPieces.append(piece)
-
         if player == 2:
-
-            if g.Pos(1,1) == 2:
-                angle = angle + 100
-            if g.Pos(1,8) == 2:
-                angle = angle + 100
-            if g.Pos(8,1) == 2:
-                angle = angle + 100
-            if g.Pos(8,8) == 2:
-                angle = angle + 100
-
-            if g.Pos(1,1) == 1:
-                angle = angle - 100
-            if g.Pos(1,8) == 1:
-                angle = angle - 100
-            if g.Pos(8,1) == 1:
-                angle = angle - 100
-            if g.Pos(8,8) == 1:
-                angle = angle - 100
-
-
             for i in xrange(1,9):
                 for j in xrange(1,9):
                     if prev_g.Pos(i,j) == 2 and g.Pos(i,j) == 1:
                         piece = {"Where":[j,i]}
                         turnOverPieces.append(piece)
-
 
         for piece in turnOverPieces:
 
@@ -309,40 +269,31 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             if g.Pos(x-1,y-1) == 0:
                 degreeOfFreedom = degreeOfFreedom + 1
 
-        print(angle)
-
-        return degreeOfFreedom + angle
-
-
-    def middleStageScore(self,g, player):
-
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves*5
+        return pieceScore + degreeOfFreedom * 5 + numOfmoves * 5
 
 
-    #def pattern(self, g, player):
-
+    def middleStageScore3(self, g, player):
+        pieceScore = MainHandler.calcPieceScore(self, g, player)
+        return pieceScore
 
     def calcPieceScore(self, g, player):
 
         black = 0 
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [500,-100,50,50,50,50,-100,500],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[500,-100,60,60,60,60,-100,500]
+        scores = [700,-300,50,50,50,50,-300,700],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[700,-300,60,60,60,60,-300,700]
         for i in range(8):
             for j in range(8):
-                if g.Pos(i, j) == 1:
+                if g.Pos(j, i) == 1:
                     black = black + scores[i][j]
-                elif g.Pos(i, j) == 2:
+                elif g.Pos(j, i) == 2:
                     white = white + scores[i][j]
-
         if player == 1:
             return black - white
 
         return white - black
-
-
 
 
     def lateStageScore(self, g, player):
