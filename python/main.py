@@ -195,12 +195,10 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 return MainHandler.lateStageScore(self, g, player), move
 
         if isMe:
-            firstMove = {"Where":[0,0]}
             bestMove = {"Where":[0,0]}
             moves = g.ValidMoves()
             for move in moves:
                 if depth == 4:
-                    firstMove = move
                     bestMove = move
                 gameBoard = g.NextBoardPosition(move)
                 (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
@@ -214,11 +212,9 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         else:
             bestMove = {"Where":[0,0]}
-            firstMove = {"Where":[0,0]}
             moves = g.ValidMoves()
             for move in moves:
                 if depth == 3:
-                    firstMove = move
                     bestMove = move
                 gameBoard = g.NextBoardPosition(move)
                 (beta0, move0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta,countOfPiece, True, player, move, begin)
