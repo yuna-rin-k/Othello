@@ -183,44 +183,58 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         end = time.time()
 
-        if end - begin > 12.2:
+        if end - begin > 11.5:
         
             if countOfPiece >= 22 and countOfPiece <=28:
                 return MainHandler.middleStageScore2(self, g, prev_g, player), move
             elif countOfPiece <= 34:
                 return MainHandler.middleStageScore(self,g, player), move
-            #elif countOfPiece <= 44:
             elif countOfPiece <= 52:
                 return MainHandler.middleStageScore3(self,g, player), move
             else:
                 return MainHandler.lateStageScore(self, g, player), move
 
         if isMe:
+            firstMove = {"Where":[0,0]}
+            bestMove = {"Where":[0,0]}
             moves = g.ValidMoves()
             for move in moves:
+                if depth == 4:
+                    firstMove = move
+                    bestMove = move
                 gameBoard = g.NextBoardPosition(move)
                 (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
-                alpha = max(alpha, alpha0)
+                if alpha0 > alpha:
+                    alpha = alpha0
+                    bestMove = move
+
                 if alpha >= beta:
                     break
-            return alpha, move
+            return alpha, bestMove
 
         else:
+            bestMove = {"Where":[0,0]}
+            firstMove = {"Where":[0,0]}
             moves = g.ValidMoves()
             for move in moves:
+                if depth == 3:
+                    firstMove = move
+                    bestMove = move
                 gameBoard = g.NextBoardPosition(move)
                 (beta0, move0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta,countOfPiece, True, player, move, begin)
-                beta = min(beta, beta0)
+                if beta0 < beta:
+                    beta = beta0
+                    bestMove = move
                 if alpha >= beta:
                     break
-            return beta, move
+            return beta, bestMove
 
     
     def middleStageScore(self, g, player):
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves*7
+        return pieceScore + numOfmoves*6
 
 
     def middleStageScore2(self, g, prev_g, player):
@@ -293,7 +307,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         if player == 1:
             return black - white
 
-        return white - black
+        else:
+            return white - black
 
 
     def lateStageScore(self, g, player):
