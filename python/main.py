@@ -176,25 +176,34 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
     def runMaxmin(self, g, countOfPiece, player, begin):
         bestMove = {"Where":[0,0]}
-        bestScore = -90000000
+        bestScore0 = -90000000
+        bestScore1 = 90000000
+        score = 0
         for move in g.ValidMoves():
 
             gameBoard = g.NextBoardPosition(move)
-            score = MainHandler.maxmin(self, 4, gameBoard, g, countOfPiece, player, begin)
-           
+            (score, player0) = MainHandler.maxmin(self, 4, gameBoard, g, countOfPiece, player, begin)
             #print(score)
-            #print(bestScore)
-            if score > bestScore:
-                print('score')
-                print(score)
-                bestScore = score
-                bestMove = move
+            if player0 == player:
+            #if score[1] == player:
+                if score > bestScore0:
+                    #print('score')
+                    #print(player)
+                    #print(score)
+                    bestScore0 = score
+                    bestMove = move
+            else:
+                if score < bestScore1:
+                    #print('score1')
+                    #print(score)
+                    bestScore1 = score
+                    bestMove = move
 
         return bestMove
 
     def maxmin(self, depth, g, prev_g, countOfPiece, player, begin):
         move = {"Where":[0,0]}
-        return MainHandler.alphabeta(self, depth, g, prev_g, -1000000, 1000000, countOfPiece, True, player, move, begin)
+        return MainHandler.alphabeta(self, depth, g, prev_g, -50000000, 50000000, countOfPiece, True, player, move, begin)
 
 
     #return score
@@ -202,15 +211,18 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         end = time.time()
 
-        if end - begin > 3 and countOfPiece > 56:
+        #if end - begin > 3 and countOfPiece > 54:
+            #print('late')
+            #return MainHandler.lateStageScore(self, g, player), player
 
-            return MainHandler.lateStageScore(self, g, player)
-
-        elif end - begin > 1 and countOfPiece <= 56:
-           #if countOfPiece >= 22 and countOfPiece <=28:
-                #return MainHandler.middleStageScore2(self, g, prev_g, player)
-            
-            return MainHandler.middleStageScore(self,g, player)
+        if end - begin > 0.5:
+            #if countOfPiece >= 22 and countOfPiece <=26:
+                #return MainHandler.middleStageScore3(self, g, player), player
+            #else:
+            if countOfPiece <= 56:
+                return MainHandler.middleStageScore(self,g, player), player
+            else:
+                return MainHandler.lateStageScore(self, g, player), player
             #elif countOfPiece <= 52:
                 #return MainHandler.middleStageScore3(self,g, player)
             #else:
@@ -220,27 +232,31 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
-                alpha = max(alpha, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin))
+                (alpha0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
+                alpha = max(alpha, alpha0)
+                #alpha = max(alpha, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin))
                 if alpha >= beta:
                     break
-            return alpha
+            return alpha, 3-player
 
         else:
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
-                beta = min(beta, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin))
+                (beta0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin)
+                #beta = min(beta, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin))
+                beta = min(beta, beta0)
                 if alpha >= beta:
                     break
-            return beta
+            return beta, player
 
     
     def middleStageScore(self, g, player):
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        #return pieceScore + numOfmoves * 5
-        return pieceScore
+        return pieceScore + numOfmoves * 5
+        #return pieceScore
 
 
     def middleStageScore2(self, g, prev_g, player):
@@ -303,9 +319,9 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         black = 0
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [1000,-250,100,100,100,100,-250,1000],[-250, -350, 25, 25, 25, 25, -350, -250],[100, 20, 30, 30, 30, 30,20, 100],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[-250, -350, 20, 20, 20, 20, -350, -250],[1000,-250,100,100,100,100,-250,1000]
-        for i in range(8):
-            for j in range(8):
+        scores = [3000,-250,100,100,100,100,-250,3000],[-250, -450, 25, 25, 25, 25, -450, -250],[100, 20, 30, 30, 30, 30,20, 100],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[-250, -450, 20, 20, 20, 20, -450, -250],[3000,-250,100,100,100,100,-250,3000]
+        for i in xrange(1,8):
+            for j in xrange(1,8):
                 if g.Pos(j, i) == 1:
                     black = black + scores[i][j]
                 elif g.Pos(j, i) == 2:
@@ -314,6 +330,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             return black - white
 
         else:
+            #print(white-black)
             return white - black
 
 
