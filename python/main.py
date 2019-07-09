@@ -170,67 +170,77 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                     if g.Pos(i, j) != 0:
                         countOfPiece = countOfPiece + 1
             begin = time.time()
-            (score, move) = MainHandler.maxmin(self, 4, g, g, countOfPiece, g.Next(), begin)
+            move = MainHandler.runMaxmin(self, g, countOfPiece, g.Next(), begin)
             self.response.write(PrettyMove(move))
 
 
+    def runMaxmin(self, g, countOfPiece, player, begin):
+        bestMove = {"Where":[0,0]}
+        bestScore = -90000000
+        for move in g.ValidMoves():
+
+            gameBoard = g.NextBoardPosition(move)
+            score = MainHandler.maxmin(self, 4, gameBoard, g, countOfPiece, player, begin)
+           
+            #print(score)
+            #print(bestScore)
+            if score > bestScore:
+                print('score')
+                print(score)
+                bestScore = score
+                bestMove = move
+
+        return bestMove
+
     def maxmin(self, depth, g, prev_g, countOfPiece, player, begin):
         move = {"Where":[0,0]}
-        return MainHandler.alphabeta(self, depth, g, prev_g, -100000000, 1000000000, countOfPiece, True, player,move, begin)
+        return MainHandler.alphabeta(self, depth, g, prev_g, -1000000, 1000000, countOfPiece, True, player, move, begin)
 
 
+    #return score
     def alphabeta(self, depth, g, prev_g, alpha, beta, countOfPiece, isMe, player, move, begin):
 
         end = time.time()
 
-        if end - begin > 11.5:
-        
-            if countOfPiece >= 22 and countOfPiece <=28:
-                return MainHandler.middleStageScore2(self, g, prev_g, player), move
-            elif countOfPiece <= 34:
-                return MainHandler.middleStageScore(self,g, player), move
-            elif countOfPiece <= 52:
-                return MainHandler.middleStageScore3(self,g, player), move
-            else:
-                return MainHandler.lateStageScore(self, g, player), move
+        if end - begin > 3 and countOfPiece > 56:
+
+            return MainHandler.lateStageScore(self, g, player)
+
+        elif end - begin > 1 and countOfPiece <= 56:
+           #if countOfPiece >= 22 and countOfPiece <=28:
+                #return MainHandler.middleStageScore2(self, g, prev_g, player)
+            
+            return MainHandler.middleStageScore(self,g, player)
+            #elif countOfPiece <= 52:
+                #return MainHandler.middleStageScore3(self,g, player)
+            #else:
+                #return MainHandler.lateStageScore(self, g, player)
 
         if isMe:
-            bestMove = {"Where":[0,0]}
             moves = g.ValidMoves()
             for move in moves:
-                if depth == 4:
-                    bestMove = move
                 gameBoard = g.NextBoardPosition(move)
-                (alpha0, move0)  = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
-                if alpha0 > alpha:
-                    alpha = alpha0
-                    bestMove = move
-
+                alpha = max(alpha, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin))
                 if alpha >= beta:
                     break
-            return alpha, bestMove
+            return alpha
 
         else:
-            bestMove = {"Where":[0,0]}
             moves = g.ValidMoves()
             for move in moves:
-                if depth == 3:
-                    bestMove = move
                 gameBoard = g.NextBoardPosition(move)
-                (beta0, move0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta,countOfPiece, True, player, move, begin)
-                if beta0 < beta:
-                    beta = beta0
-                    bestMove = move
+                beta = min(beta, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin))
                 if alpha >= beta:
                     break
-            return beta, bestMove
+            return beta
 
     
     def middleStageScore(self, g, player):
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves*6
+        #return pieceScore + numOfmoves * 5
+        return pieceScore
 
 
     def middleStageScore2(self, g, prev_g, player):
@@ -281,7 +291,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + degreeOfFreedom * 5 + numOfmoves * 5
+        return pieceScore + degreeOfFreedom * 10 + numOfmoves * 10
 
 
     def middleStageScore3(self, g, player):
@@ -290,10 +300,10 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
     def calcPieceScore(self, g, player):
 
-        black = 0 
+        black = 0
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [700,-300,50,50,50,50,-300,700],[-100, -100, -50, -50, -50, -50, -100, -100],[50, -50, 0, 10, 10, 0, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 10, 15, 15, 10, -50, 50],[50, -50, 0, 10, 10, 0, -50, 50],[-100, -100, -50, -50, -50, -50, -100, -100],[700,-300,60,60,60,60,-300,700]
+        scores = [1000,-250,100,100,100,100,-250,1000],[-250, -350, 25, 25, 25, 25, -350, -250],[100, 20, 30, 30, 30, 30,20, 100],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[-250, -350, 20, 20, 20, 20, -350, -250],[1000,-250,100,100,100,100,-250,1000]
         for i in range(8):
             for j in range(8):
                 if g.Pos(j, i) == 1:
@@ -319,9 +329,11 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                     white = white + 1
 
         if player == 1:
-            return black - white
+           # print('black-white')
+            #print(black-white)
+            return (black - white) 
 
-        return white - black
+        return (white - black)
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
