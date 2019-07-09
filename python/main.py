@@ -320,12 +320,12 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
         scores = [3000,-250,100,100,100,100,-250,3000],[-250, -450, 25, 25, 25, 25, -450, -250],[100, 20, 30, 30, 30, 30,20, 100],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[-250, -450, 20, 20, 20, 20, -450, -250],[3000,-250,100,100,100,100,-250,3000]
-        for i in xrange(1,8):
-            for j in xrange(1,8):
+        for i in xrange(1,9):
+            for j in xrange(1,9):
                 if g.Pos(j, i) == 1:
-                    black = black + scores[i][j]
+                    black = black + scores[i-1][j-1]
                 elif g.Pos(j, i) == 2:
-                    white = white + scores[i][j]
+                    white = white + scores[i-1][j-1]
         if player == 1:
             return black - white
 
@@ -338,8 +338,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         black = 0
         white = 0
-        for i in range(8):
-            for j in range(8):
+        for i in xrange(1,9):
+            for j in xrange(1,9):
                 if g.Pos(i,j) == 1:
                     black = black + 1
                 if g.Pos(i,j) == 2:
