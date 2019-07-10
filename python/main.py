@@ -184,18 +184,13 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             gameBoard = g.NextBoardPosition(move)
             (score, player0) = MainHandler.maxmin(self, 4, gameBoard, g, countOfPiece, player, begin)
             #print(score)
+            #print(move["Where"][0])
             if player0 == player:
-            #if score[1] == player:
                 if score > bestScore0:
-                    #print('score')
-                    #print(player)
-                    #print(score)
                     bestScore0 = score
                     bestMove = move
             else:
                 if score < bestScore1:
-                    #print('score1')
-                    #print(score)
                     bestScore1 = score
                     bestMove = move
 
@@ -211,40 +206,29 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         end = time.time()
 
-        #if end - begin > 3 and countOfPiece > 54:
-            #print('late')
-            #return MainHandler.lateStageScore(self, g, player), player
-
-        if end - begin > 0.5:
-            #if countOfPiece >= 22 and countOfPiece <=26:
-                #return MainHandler.middleStageScore3(self, g, player), player
-            #else:
+        if end - begin > 0.5:            
             if countOfPiece <= 56:
                 return MainHandler.middleStageScore(self,g, player), player
             else:
                 return MainHandler.lateStageScore(self, g, player), player
-            #elif countOfPiece <= 52:
-                #return MainHandler.middleStageScore3(self,g, player)
-            #else:
-                #return MainHandler.lateStageScore(self, g, player)
-
+        
         if isMe:
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
                 (alpha0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
                 alpha = max(alpha, alpha0)
-                #alpha = max(alpha, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin))
                 if alpha >= beta:
                     break
             return alpha, 3-player
 
         else:
+            #print('beta')
+            #print(beta)
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
                 (beta0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin)
-                #beta = min(beta, MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin))
                 beta = min(beta, beta0)
                 if alpha >= beta:
                     break
@@ -256,9 +240,9 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
         return pieceScore + numOfmoves * 5
-        #return pieceScore
 
 
+    #使っていない
     def middleStageScore2(self, g, prev_g, player):
 
         turnOverPieces = []
@@ -309,17 +293,14 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         numOfmoves = len(g.ValidMoves())
         return pieceScore + degreeOfFreedom * 10 + numOfmoves * 10
 
-
-    def middleStageScore3(self, g, player):
-        pieceScore = MainHandler.calcPieceScore(self, g, player)
-        return pieceScore
-
     def calcPieceScore(self, g, player):
 
         black = 0
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [3000,-250,100,100,100,100,-250,3000],[-250, -450, 25, 25, 25, 25, -450, -250],[100, 20, 30, 30, 30, 30,20, 100],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[-250, -450, 20, 20, 20, 20, -450, -250],[3000,-250,100,100,100,100,-250,3000]
+        scores = [3000,-250,120,100,100,120,-250,3000],[-250, -450, 40, 25, 25, 40, -450, -250],[120, 40, 40, 30, 30, 40,40, 120],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[120, 40, 40, 30, 30, 40, 40, 120],[-250, -450, 40, 20, 20, 40, -450, -250],[3000,-250,130,100,100,120,-250,3000]
+        print('Pos')
+        print(g.Pos(1,8))
         for i in xrange(1,9):
             for j in xrange(1,9):
                 if g.Pos(j, i) == 1:
@@ -327,10 +308,10 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 elif g.Pos(j, i) == 2:
                     white = white + scores[i-1][j-1]
         if player == 1:
+            print(black-white)
             return black - white
 
         else:
-            #print(white-black)
             return white - black
 
 
@@ -340,14 +321,12 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         white = 0
         for i in xrange(1,9):
             for j in xrange(1,9):
-                if g.Pos(i,j) == 1:
+                if g.Pos(j,i) == 1:
                     black = black + 1
-                if g.Pos(i,j) == 2:
+                if g.Pos(j,i) == 2:
                     white = white + 1
 
         if player == 1:
-           # print('black-white')
-            #print(black-white)
             return (black - white) 
 
         return (white - black)
