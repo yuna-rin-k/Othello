@@ -181,10 +181,13 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         score = 0
         for move in g.ValidMoves():
 
+            x = move["Where"][0]
+            y = move["Where"][1]
+            if MainHandler.isAngle(self, x, y) and countOfPiece <= 62:
+                return move
+
             gameBoard = g.NextBoardPosition(move)
-            (score, player0) = MainHandler.maxmin(self, 4, gameBoard, g, countOfPiece, player, begin)
-            #print(score)
-            #print(move["Where"][0])
+            (score, player0) = MainHandler.maxmin(self, 2, gameBoard, g, countOfPiece, player, begin)
             if player0 == player:
                 if score > bestScore0:
                     bestScore0 = score
@@ -206,8 +209,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         end = time.time()
 
-        if end - begin > 0.5:            
-            if countOfPiece <= 56:
+        if end - begin > 0.6: 
+            if countOfPiece <= 60:
                 return MainHandler.middleStageScore(self,g, player), player
             else:
                 return MainHandler.lateStageScore(self, g, player), player
@@ -223,8 +226,6 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             return alpha, 3-player
 
         else:
-            #print('beta')
-            #print(beta)
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
@@ -239,76 +240,36 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves * 5
-
-
-    #使っていない
-    def middleStageScore2(self, g, prev_g, player):
-
-        turnOverPieces = []
-        degreeOfFreedom = 0
-        if player == 1:
-            for i in xrange(1,9):
-                for j in xrange(1,9):
-                    if prev_g.Pos(i,j) == 1 and g.Pos(i,j) == 2:
-                        piece = {"Where":[j,i]}
-                        turnOverPieces.append(piece)
-        if player == 2:
-            for i in xrange(1,9):
-                for j in xrange(1,9):
-                    if prev_g.Pos(i,j) == 2 and g.Pos(i,j) == 1:
-                        piece = {"Where":[j,i]}
-                        turnOverPieces.append(piece)
-
-        for piece in turnOverPieces:
-
-            x = piece["Where"][0]
-            y = piece["Where"][1]
-
-            if g.Pos(x+1,y) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x,y+1) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x-1,y) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x,y-1) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x+1,y+1) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x-1,y+1) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x+1,y-1) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-            if g.Pos(x-1,y-1) == 0:
-                degreeOfFreedom = degreeOfFreedom + 1
-
-        pieceScore = MainHandler.calcPieceScore(self, g, player)
-        numOfmoves = len(g.ValidMoves())
-        return pieceScore + degreeOfFreedom * 10 + numOfmoves * 10
+        return pieceScore + numOfmoves * 25
 
     def calcPieceScore(self, g, player):
 
         black = 0
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [3000,-250,120,100,100,120,-250,3000],[-250, -450, 40, 25, 25, 40, -450, -250],[120, 40, 40, 30, 30, 40,40, 120],[100, 20, 30, 30, 30,30,20, 100],[100, 20, 30, 30, 30, 30, 20, 100],[120, 40, 40, 30, 30, 40, 40, 120],[-250, -450, 40, 20, 20, 40, -450, -250],[3000,-250,130,100,100,120,-250,3000]
-        print('Pos')
-        print(g.Pos(1,8))
-        for i in xrange(1,9):
-            for j in xrange(1,9):
+        scores = [4000,-250,130,115,115,130,-250,4000],[-250, -350, 40, 25, 25, 40, -350, -250],[130, 45, 45, 35, 35, 45, 45, 130],[115, 25, 45, 45, 45, 45, 25, 115],[115, 25, 45, 45, 45, 45, 25, 115],[130, 45, 45, 35, 35, 45, 45, 130],[-250, -350, 40, 25, 25, 40, -350, -250],[4000,-250,130,115,115,130,-250,4000]
+
+        for i in xrange(1, 9):
+            for j in xrange(1, 9):
                 if g.Pos(j, i) == 1:
-                    black = black + scores[i-1][j-1]
+                    if MainHandler.changeScores(self, g, j, i, 1):
+                        black = black + 450
+                    else:
+                        black = black + scores[i-1][j-1]
                 elif g.Pos(j, i) == 2:
-                    white = white + scores[i-1][j-1]
+                    if MainHandler.changeScores(self, g, j, i, 2):
+                        white = white + 450
+                    else:
+                        white = white + scores[i-1][j-1]
+
+
+        #for i in xrange(1,9):
+            #for j in xrange(1,9):
+                #if g.Pos(j, i) == 1:
+                    #black = black + scores[i-1][j-1]
+                #elif g.Pos(j, i) == 2:
+                    #white = white + scores[i-1][j-1]
         if player == 1:
-            print(black-white)
             return black - white
 
         else:
@@ -330,6 +291,39 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             return (black - white) 
 
         return (white - black)
+
+    def isAngle(self, x, y):
+
+        if x == 1 and y == 1:
+            return True
+        if x == 1 and y == 8:
+            return True
+        if x == 8 and y == 1:
+            return True
+        if x == 8 and y == 8:
+            return 
+            True
+        return False
+
+    def changeScores(self, g, x, y, player):
+
+        if g.Pos(1, 1) == player:
+            if (x == 1 and y == 2) or (x == 2 and y == 1) or (x == 2 and y == 2) or (x == 1 and y == 7) or (x == 7 and y == 1):
+                return True
+               
+        elif g.Pos(1, 8) == player:
+            if (x == 1 and y == 7) or (x == 2 and y == 7) or (x == 2 and y == 8) or (x == 1 and y == 2) or (x == 7 and y == 8):
+                return True
+
+        elif g.Pos(8, 1) == player:
+            if (x == 7 and y == 1) or (x == 7 and y == 2) or (x == 8 and y == 2) or (x == 2 and y == 1) or (x == 8 and y == 7):
+                return True
+
+        elif g.Pos(8, 8) == player:
+            if (x == 7 and y == 8) or (x == 8 and y == 7) or (x == 7 and y == 7) or (x == 2 and y == 7) or (x == 8 and y == 2):
+                return True
+       
+        return False
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
