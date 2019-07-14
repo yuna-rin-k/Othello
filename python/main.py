@@ -241,7 +241,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves * 35
+        return pieceScore + numOfmoves * 25
         #return pieceScore + numOfmoves * 25
 
     def calcPieceScore(self, g, player):
@@ -349,6 +349,14 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 return True
 
         return False
+
+    #def changeScores2(self, g, x, y, player):
+
+        #if g.Pos(1, 1) == player:
+            #if (x == 1 or y == 1) and (x != 7 and y != 1) and (x != 1 and y != 7):
+                #return True
+
+
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
