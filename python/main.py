@@ -175,6 +175,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
 
     def runMaxmin(self, g, countOfPiece, player, begin):
+
         bestMove = {"Where":[0,0]}
         bestScore0 = -90000000
         bestScore1 = 90000000
@@ -187,7 +188,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 return move
 
             gameBoard = g.NextBoardPosition(move)
-            (score, player0) = MainHandler.maxmin(self, 2, gameBoard, g, countOfPiece, player, begin)
+            (score, player0) = MainHandler.maxmin(self, 2, gameBoard, countOfPiece, player, begin)
             if player0 == player:
                 if score > bestScore0:
                     bestScore0 = score
@@ -199,17 +200,17 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return bestMove
 
-    def maxmin(self, depth, g, prev_g, countOfPiece, player, begin):
+    def maxmin(self, depth, g, countOfPiece, player, begin):
         move = {"Where":[0,0]}
-        return MainHandler.alphabeta(self, depth, g, prev_g, -50000000, 50000000, countOfPiece, True, player, move, begin)
+        return MainHandler.alphabeta(self, depth, g, -50000000, 50000000, countOfPiece, True, player, move, begin)
 
 
     #return score
-    def alphabeta(self, depth, g, prev_g, alpha, beta, countOfPiece, isMe, player, move, begin):
+    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isMe, player, move, begin):
 
         end = time.time()
 
-        if end - begin > 0.6: 
+        if end - begin > 0.3: 
             if countOfPiece <= 60:
                 return MainHandler.middleStageScore(self,g, player), player
             else:
@@ -219,7 +220,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
-                (alpha0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, False, player, move, begin)
+                (alpha0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, alpha, beta, countOfPiece, False, player, move, begin)
                 alpha = max(alpha, alpha0)
                 if alpha >= beta:
                     break
@@ -229,7 +230,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
-                (beta0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, g, alpha, beta, countOfPiece, True, player, move, begin)
+                (beta0, player0) = MainHandler.alphabeta(self, depth-1, gameBoard, alpha, beta, countOfPiece, True, player, move, begin)
                 beta = min(beta, beta0)
                 if alpha >= beta:
                     break
@@ -240,35 +241,36 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         pieceScore = MainHandler.calcPieceScore(self, g, player)
         numOfmoves = len(g.ValidMoves())
-        return pieceScore + numOfmoves * 25
+        return pieceScore + numOfmoves * 35
+        #return pieceScore + numOfmoves * 25
 
     def calcPieceScore(self, g, player):
 
         black = 0
         white = 0
                       #1                            #2                                          #3                                #4                                  #5                                  #6                              #7
-        scores = [4000,-250,130,115,115,130,-250,4000],[-250, -350, 40, 25, 25, 40, -350, -250],[130, 45, 45, 35, 35, 45, 45, 130],[115, 25, 45, 45, 45, 45, 25, 115],[115, 25, 45, 45, 45, 45, 25, 115],[130, 45, 45, 35, 35, 45, 45, 130],[-250, -350, 40, 25, 25, 40, -350, -250],[4000,-250,130,115,115,130,-250,4000]
+        scores = [4000,-400,130,115,115,130,-400,4000],[-400, -500, 40, 25, 25, 40, -500, -400],[130, 45, 45, 35, 35, 45, 45, 130],[115, 25, 45, 45, 45, 45, 25, 115],[115, 25, 45, 45, 45, 45, 25, 115],[130, 45, 45, 35, 35, 45, 45, 130],[-400, -500, 40, 25, 25, 40, -500, -400],[4000,-400,130,115,115,130,-400,4000]
 
         for i in xrange(1, 9):
             for j in xrange(1, 9):
+
                 if g.Pos(j, i) == 1:
-                    if MainHandler.changeScores(self, g, j, i, 1):
-                        black = black + 450
+                    if MainHandler.changeScores0(self, g, j, i, 1):
+                        black = black + 550
+                    elif MainHandler.changeScores1(self, g, j ,i, 1):
+                       black = black + 60
                     else:
                         black = black + scores[i-1][j-1]
+
                 elif g.Pos(j, i) == 2:
-                    if MainHandler.changeScores(self, g, j, i, 2):
-                        white = white + 450
+                    if MainHandler.changeScores0(self, g, j, i, 2):
+                        white = white + 550
+                    elif MainHandler.changeScores1(self, g, j, i, 2):
+                        white = white + 60
                     else:
                         white = white + scores[i-1][j-1]
 
 
-        #for i in xrange(1,9):
-            #for j in xrange(1,9):
-                #if g.Pos(j, i) == 1:
-                    #black = black + scores[i-1][j-1]
-                #elif g.Pos(j, i) == 2:
-                    #white = white + scores[i-1][j-1]
         if player == 1:
             return black - white
 
@@ -301,28 +303,51 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         if x == 8 and y == 1:
             return True
         if x == 8 and y == 8:
-            return 
-            True
+            return True
         return False
 
-    def changeScores(self, g, x, y, player):
+    def changeScores0(self, g, x, y, player):
 
         if g.Pos(1, 1) == player:
-            if (x == 1 and y == 2) or (x == 2 and y == 1) or (x == 2 and y == 2) or (x == 1 and y == 7) or (x == 7 and y == 1):
+            if (x == 1 and y == 2) or (x == 2 and y == 1) or (x == 2 and y == 2):
+            #if (x == 1 and y != 7) or (y == 1 and x != 7):
                 return True
                
-        elif g.Pos(1, 8) == player:
-            if (x == 1 and y == 7) or (x == 2 and y == 7) or (x == 2 and y == 8) or (x == 1 and y == 2) or (x == 7 and y == 8):
+        if g.Pos(1, 8) == player:
+            if (x == 1 and y == 7) or (x == 2 and y == 7) or (x == 2 and y == 8):
+            #if (x == 1 and y != 2) or (y == 8 and x != 7):
                 return True
 
-        elif g.Pos(8, 1) == player:
-            if (x == 7 and y == 1) or (x == 7 and y == 2) or (x == 8 and y == 2) or (x == 2 and y == 1) or (x == 8 and y == 7):
+        if g.Pos(8, 1) == player:
+            if (x == 7 and y == 1) or (x == 7 and y == 2) or (x == 8 and y == 2):
+            #if (x == 8 and y != 7) or (y ==1 and x != 2):
                 return True
 
-        elif g.Pos(8, 8) == player:
-            if (x == 7 and y == 8) or (x == 8 and y == 7) or (x == 7 and y == 7) or (x == 2 and y == 7) or (x == 8 and y == 2):
+        if g.Pos(8, 8) == player:
+            if (x == 7 and y == 8) or (x == 8 and y == 7) or (x == 7 and y == 7):
+            #if (x == 8 and y != 2) or (y == 8 and x != 2):
                 return True
        
+        return False
+
+    def changeScores1(self, g, x, y, player):
+
+        if g.Pos(2, 1) == player and g.Pos(2, 8) == player:
+            if (x == 2 and y != 2 and y != 7):
+                return True
+
+        if g.Pos(1, 7) == player and g.Pos(8, 7) == player:
+            if (y == 7 and x != 2 and x != 7):
+                return True
+
+        if g.Pos(1, 2) == player and g.Pos(8, 2) == player:
+            if (y == 2 and x != 2 and y != 7):
+                return True
+
+        if g.Pos(7, 1) == player and g.Pos(7, 8) == player:
+            if (x == 7 and y != 2 and y != 7):
+                return True
+
         return False
 
 app = webapp2.WSGIApplication([
