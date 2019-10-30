@@ -189,12 +189,12 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             if MainHandler.isAngle(self, x, y):
                 return move
 
-            if MainHandler.changeScores0(self, g, x, y, player):
-                return move
-
             gameBoard = g.NextBoardPosition(move)
             
             score = MainHandler.maxmin(self, 2, gameBoard, countOfPiece, player, begin, player, gameBoard)
+
+            if MainHandler.changeScores0(self, g, x, y, player):
+                score += 10000000
 
             if score > bestScore0:
                 bestScore0 = score
