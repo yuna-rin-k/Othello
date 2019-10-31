@@ -191,7 +191,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
             gameBoard = g.NextBoardPosition(move)
             
-            score = MainHandler.maxmin(self, 2, gameBoard, countOfPiece, player, begin, player, gameBoard)
+            score = MainHandler.maxmin(self, 2, gameBoard, countOfPiece, player, begin, player, g)
 
             if MainHandler.changeScores0(self, g, x, y, player):
                 score += 10000000
@@ -205,25 +205,28 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     def maxmin(self, depth, g, countOfPiece, player, begin, PLAYER, GAMEBOARD):
         move = {"Where":[0,0]}
 
-        return MainHandler.alphabeta(self, depth, g, -9999999, 9999999, countOfPiece, False, player, move, begin, PLAYER)
+        return MainHandler.alphabeta(self, depth, g, -9999999, 9999999, countOfPiece, False, player, move, begin, PLAYER, GAMEBOARD)
 
 
     #return score
-    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isMe, player, move, begin, PLAYER):
+    def alphabeta(self, depth, g, alpha, beta, countOfPiece, isMe, player, move, begin, PLAYER, GAMEBOARD):
 
         end = time.time()
 
         if depth == 0 or end - begin >= 13:
             
             if countOfPiece <= 60:
-                return MainHandler.middleCalcScore(self, g, PLAYER, countOfPiece)
+                return MainHandler.middleCalcScore(self, g, PLAYER, countOfPiece, GAMEBOARD)
+            #elif countOfPiece <= 60:
+             #   return MainHandler.lateStageScore(self, g, PLAYER)
+                        
             return MainHandler.finalStageScore(self, g, PLAYER)
         
         if isMe:
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
-                alpha0 = MainHandler.alphabeta(self, depth-1, gameBoard, alpha, beta, countOfPiece, False, player, move, begin, PLAYER)
+                alpha0 = MainHandler.alphabeta(self, depth-1, gameBoard, alpha, beta, countOfPiece, False, player, move, begin, PLAYER, GAMEBOARD)
                 alpha = max(alpha, alpha0)
                 if alpha >= beta:
                     break
@@ -233,14 +236,14 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             moves = g.ValidMoves()
             for move in moves:
                 gameBoard = g.NextBoardPosition(move)
-                beta0 = MainHandler.alphabeta(self, depth-1, gameBoard, alpha, beta, countOfPiece, True, player, move, begin, PLAYER)
+                beta0 = MainHandler.alphabeta(self, depth-1, gameBoard, alpha, beta, countOfPiece, True, player, move, begin, PLAYER, GAMEBOARD)
                 beta = min(beta, beta0)
                 if alpha >= beta:
                     break
             return beta
     
 
-    def middleCalcScore(self, g, player, countOfPiece):
+    def middleCalcScore(self, g, player, countOfPiece, GAMEBOARD):
 
         black = 0
         white = 0
@@ -276,18 +279,46 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         nextPlayer = g.Next()
         if player == 1:
-            if nextPlayer == 1 and MainHandler.hasTwoAngle(self, g) == False:
+            if nextPlayer == 1 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
                 return black - white + len(g.ValidMoves()) * 300
-            elif nextPlayer == 2 and MainHandler.hasTwoAngle(self, g) == False:
+            elif nextPlayer == 2 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
                 return black - white - len(g.ValidMoves()) * 300
             return black - white
 
         else:
-            if nextPlayer == 2 and MainHandler.hasTwoAngle(self, g) == False:
+            if nextPlayer == 2 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
                 return white - black + len(g.ValidMoves()) * 300
-            elif nextPlayer == 1 and MainHandler.hasTwoAngle(self, g) == False:
+            elif nextPlayer == 1 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
                 return white - black - len(g.ValidMoves()) * 300
             return white - black
+
+    
+    def lateStageScore(self, g, player):
+
+        black = 0
+        white = 0
+
+        scores = [400,60,60,60,60,60,60,400],[60, -500, 40, 40, 40, 40, -500, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, -500, 40, 40, 40, 40, -500, 60],[400, 60, 60, 60, 60, 60, 60, 400]
+
+        for i in xrange(1, 9):
+            for j in xrange(1, 9):
+
+                if g.Pos(i, j) == 1:
+                    if MainHandler.changeScores0_1(self, g, i, j, 1):
+                        black += 60
+                    else:
+                        black = black + scores[i-1][j-1]
+
+                elif g.Pos(i, j) == 2:
+                    if MainHandler.changeScores0_1(self, g, i, j, 2):
+                        white += 60
+                    else:
+                        white = white + scores[i-1][j-1]
+
+        if player == 1:
+            return black - white
+
+        return white - black
 
 
     def finalStageScore(self, g, player):
@@ -376,6 +407,43 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             if x == 7 and y == 7:
                 return True
        
+        return False
+
+    def changeScores1(self, g, x, y, player):
+
+        if g.Pos(2, 1) == player and g.Pos(2, 8) == player:
+            if (x == 2 and y != 2 and y != 7):
+                return True
+
+        if g.Pos(1, 7) == player and g.Pos(8, 7) == player:
+            if (y == 7 and x != 2 and x != 7):
+                return True
+
+        if g.Pos(1, 2) == player and g.Pos(8, 2) == player:
+            if (y == 2 and x != 2 and x != 7):
+                return True
+
+        if g.Pos(7, 1) == player and g.Pos(7, 8) == player:
+            if (x == 7 and y != 2 and y != 7):
+                return True
+
+        return False
+
+    def changeScores2(self, g, x, y, player):
+
+        if x == 2:
+            if g.Pos(1, y) == player:
+                return True
+        if x == 7:
+            if g.Pos(8, y) == player:
+                return True
+        if y == 2:
+            if g.Pos(x, 1) == player:
+                return True
+        if y == 7:
+            if g.Pos(x, 8) == player:
+                return True
+
         return False
 
 app = webapp2.WSGIApplication([
