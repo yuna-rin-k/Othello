@@ -217,9 +217,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
             
             if MainHandler.GetNumOfAngle(self, GAMEBOARD) <= 3:
                 return MainHandler.middleCalcScore(self, g, PLAYER, countOfPiece, GAMEBOARD)
-            #elif countOfPiece <= 61:
-             #   return MainHandler.lateStageScore(self, g, PLAYER)
-
+                
             return MainHandler.finalStageScore(self, g, PLAYER)
         
         if isMe:
