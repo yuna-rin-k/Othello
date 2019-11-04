@@ -191,7 +191,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
             gameBoard = g.NextBoardPosition(move)
             
-            score = MainHandler.maxmin(self, 2, gameBoard, countOfPiece, player, begin, player, g)
+            score = MainHandler.maxmin(self, 1, gameBoard, countOfPiece, player, begin, player, g)
 
             if MainHandler.changeScores0(self, g, x, y, player):
                 score += 10000000
@@ -202,24 +202,24 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return bestMove
 
+
     def maxmin(self, depth, g, countOfPiece, player, begin, PLAYER, GAMEBOARD):
         move = {"Where":[0,0]}
 
         return MainHandler.alphabeta(self, depth, g, -9999999, 9999999, countOfPiece, False, player, move, begin, PLAYER, GAMEBOARD)
 
 
-    #return score
     def alphabeta(self, depth, g, alpha, beta, countOfPiece, isMe, player, move, begin, PLAYER, GAMEBOARD):
 
         end = time.time()
 
         if depth == 0 or end - begin >= 13:
             
-            if countOfPiece <= 60:
+            if MainHandler.GetNumOfAngle(self, GAMEBOARD) <= 3:
                 return MainHandler.middleCalcScore(self, g, PLAYER, countOfPiece, GAMEBOARD)
-            #elif countOfPiece <= 60:
+            #elif countOfPiece <= 61:
              #   return MainHandler.lateStageScore(self, g, PLAYER)
-                        
+
             return MainHandler.finalStageScore(self, g, PLAYER)
         
         if isMe:
@@ -248,7 +248,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         black = 0
         white = 0
 
-        scores = [9000,-3000,130,130,130,130,-3000,9000],[-3000, -5000, 0, 0, 0, 0, -5000, -3000],[130, 0, 45, 35, 35, 45, 0, 130],[130, 0, 45, 45, 45, 45, 0, 130],[130, 0, 45, 45, 45, 45, 0, 130],[130, 0, 45, 35, 35, 45, 0, 130],[-3000, -5000, 0, 0, 0, 0, -5000, -3000],[9000, -3000, 130, 130, 130, 130, -3000, 9000]
+        scores = [30, -12, 0, 0, 0, 0, -12, 30], [-12, -16, -3, -3, -3, -3, -16, -12], [0, -3, 0, -1, -1, 0, -3, 0], [0, -3, -1, -1, -1, -1, -3, 0], [0, -3, -1, -1, -1, -1, -3, 0], [0, -3, 0, -1, -1, 0, -3, 0], [-12, -16, -3, -3, -3, -3, -16, -12], [30, -12, 0, 0, 0, 0, -12, 30]
 
         for i in xrange(1, 9):
             for j in xrange(1, 9):
@@ -256,40 +256,44 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 if g.Pos(j, i) == 1:
 
                     if MainHandler.changeScores0_1(self, g, i, j, 1):
-                        black += 130
+                        black += 2
                     elif MainHandler.changeScores0(self, g, i ,j, 1):
-                        black += 200
+                        black += 3
                     elif MainHandler.changeScores0(self, g, i, j, 2):
                         black += 0
+                    elif MainHandler.changeScores2(self, g, i, j, 1):
+                        black += -1
                     else:
-                        black +=scores[i-1][j-1]
+                        black += scores[i-1][j-1]
 
 
                 elif g.Pos(j, i) == 2:
 
                     if MainHandler.changeScores0_1(self, g, i, j, 2):
-                        white += 130
+                        white += 2
                     elif MainHandler.changeScores0(self, g, i, j, 2):
-                        white += 200
+                        white += 3
                     elif MainHandler.changeScores0(self, g, i, j, 1):
                         white += 0
+                    elif MainHandler.changeScores2(self, g, i, j, 2):
+                        white += -1
                     else:
                         white += scores[i-1][j-1]
 
 
         nextPlayer = g.Next()
         if player == 1:
-            if nextPlayer == 1 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
-                return black - white + len(g.ValidMoves()) * 300
-            elif nextPlayer == 2 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
-                return black - white - len(g.ValidMoves()) * 300
+            if nextPlayer == 1 and MainHandler.GetNumOfAngle(self, GAMEBOARD) <= 2:
+                return black - white + len(g.ValidMoves()) * 2
+            elif nextPlayer == 2 and MainHandler.GetNumOfAngle(self, GAMEBOARD) <= 2:
+                return black - white - len(g.ValidMoves()) * 2
             return black - white
 
         else:
-            if nextPlayer == 2 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
-                return white - black + len(g.ValidMoves()) * 300
-            elif nextPlayer == 1 and MainHandler.hasTwoAngle(self, GAMEBOARD) == False:
-                return white - black - len(g.ValidMoves()) * 300
+            if nextPlayer == 2 and MainHandler.GetNumOfAngle(self, GAMEBOARD) <= 2:
+                return white - black + len(g.ValidMoves()) * 2
+            elif nextPlayer == 1 and MainHandler.GetNumOfAngle(self, GAMEBOARD) <= 2:
+                return white - black - len(g.ValidMoves()) * 2
             return white - black
 
     
@@ -298,7 +302,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         black = 0
         white = 0
 
-        scores = [400,60,60,60,60,60,60,400],[60, -500, 40, 40, 40, 40, -500, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, 40, 40, 40, 40, 40, 40, 60],[60, -500, 40, 40, 40, 40, -500, 60],[400, 60, 60, 60, 60, 60, 60, 400]
+        scores = [400,-60,90,90,90,90,-60,400],[-60, -500, 40, 40, 40, 40, -500, -60],[90, 40, 40, 40, 40, 40, 40, 90],[90, 40, 40, 40, 40, 40, 40, 90],[90, 40, 40, 40, 40, 40, 40, 90],[90, 40, 40, 40, 40, 40, 40, 90],[-60, -500, 40, 40, 40, 40, -500, -60],[400, -60, 90, 90, 90, 90, -60, 400]
 
         for i in xrange(1, 9):
             for j in xrange(1, 9):
@@ -339,6 +343,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return white - black
 
+
     def isAngle(self, x, y):
 
         if x == 1 and y == 1:
@@ -352,7 +357,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return False
 
-    def hasTwoAngle(self, g):
+
+    def GetNumOfAngle(self, g):
 
         numOfAngle = 0
 
@@ -365,9 +371,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
         if g.Pos(8, 8) != 0:
             numOfAngle += 1
 
-        if numOfAngle >= 2:
-            return True
-        return False
+        return numOfAngle
+
 
     def changeScores0(self, g, x, y, player):
 
@@ -389,6 +394,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
        
         return False
 
+
     def changeScores0_1(self, g, x, y, player):
 
         if g.Pos(1, 1) == player:
@@ -408,6 +414,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 return True
        
         return False
+
 
     def changeScores1(self, g, x, y, player):
 
@@ -429,19 +436,20 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
         return False
 
-    def changeScores2(self, g, x, y, player):
+
+    def changeScores2(self, g, y, x, player):
 
         if x == 2:
-            if g.Pos(1, y) == player:
+            if g.Pos(y, 1) == player:
                 return True
         if x == 7:
-            if g.Pos(8, y) == player:
+            if g.Pos(y, 8) == player:
                 return True
         if y == 2:
-            if g.Pos(x, 1) == player:
+            if g.Pos(1, x) == player:
                 return True
         if y == 7:
-            if g.Pos(x, 8) == player:
+            if g.Pos(8, x) == player:
                 return True
 
         return False
